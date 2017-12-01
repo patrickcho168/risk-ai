@@ -285,8 +285,8 @@ class RiskMDP:
         actionType = action[0]
         results = []
         noGameReward = [0] * self.numberOfPlayers
-        attackReward = 0
-        winRewardFactor = 10
+        attackReward = .1
+        winRewardFactor = 1000
         if gameState == self.gameStates.end:
             return results
         # elif actionType == self.gameActions.tradeCards:
@@ -463,21 +463,7 @@ class RiskMDP:
         def safe_ratio(x, y, base):
             return (float(base)+x)/(float(base)+y)
 
-        # features.append(num_my_troops)
-        # features.append(num_opp_troops)
-        # features.append(safe_ratio(num_my_troops, num_opp_troops, 1))
-
-        features.append(num_my_countries)
-        features.append(num_opp_countries)
-        features.append(safe_ratio(num_my_countries, num_opp_countries, .1))
-
-        # features.append(my_continent_bonus)
-        # features.append(opp_continent_bonus)
-        # features.append(safe_ratio(my_continent_bonus, opp_continent_bonus, .1))
-        
-        # features = np.log(1.+np.array(features))
-
-        feature_pairs = []
-        for i in range(len(features)):
-            feature_pairs.append((i, features[i]))
-        return feature_pairs
+        features.append((tuple([1+(num_my_troops/5), 1+(num_opp_troops/5), 'troop']), 1))
+        features.append((tuple([num_my_countries, num_opp_countries, 'country']), 1))
+        features.append((tuple([my_continent_bonus, opp_continent_bonus, 'continent']), 1))
+        return features

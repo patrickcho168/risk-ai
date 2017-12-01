@@ -29,7 +29,7 @@ class QLearningAlgorithm():
         else:
             # return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]
             best_pair = max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))
-            print best_pair[0]
+            # print best_pair[0]
             return best_pair[1]
 
 
@@ -48,6 +48,5 @@ class QLearningAlgorithm():
         Qhat = self.getQ(state, action, playerNum)
         Vhat = max([self.getQ(newState, act, playerNum) for act in self.actions(newState)])
         features = self.featureExtractor(state, action, playerNum)
-        print Qhat, Vhat, features, self.weights
         for f, v in features:
             self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[playerNum] + self.discount * Vhat)) * v

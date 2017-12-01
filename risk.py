@@ -70,7 +70,7 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
-    rewards = simulate(mdp, rl, numTrials=10, verbose=False, show=False, showTime=0.05)
+    rewards = simulate(mdp, rl, numTrials=100, verbose=False, show=False, showTime=0.05)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -79,21 +79,25 @@ if __name__ == "__main__":
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
-    orderedWeights = []
     
-    for state, weight in rl.weights.iteritems():
-        if weight != 0:
-            print "%s: %s" %(state, weight)
+    # for state, weight in rl.weights.iteritems():
+    #     if weight != 0:
+    #         print "%s: %s" %(state, weight)
 
     print player0RewardsSequence
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
 
-    # player0Rewards = 0
-    # player1Rewards = 0
-    # rewards = simulate(mdp, rl, numTrials=10, verbose=False, show=False, player0_random=True, do_feedback=False)
-    # for reward in rewards:
-    #     player0Rewards += reward[0]
-    #     player1Rewards += reward[1]
-    # print "Player 0 Total Reward: %s" %player0Rewards
-    # print "Player 1 Total Reward: %s" %player1Rewards
+    player0Rewards = 0
+    player1Rewards = 0
+    player0RewardsSequence = []
+    rewards = simulate(mdp, rl, numTrials=100, verbose=False, show=False, player0_random=True, do_feedback=False)
+
+    for reward in rewards:
+        player0Rewards += reward[0]
+        player1Rewards += reward[1]
+        player0RewardsSequence.append(reward[0])
+
+    print player0RewardsSequence
+    print "Player 0 Total Reward: %s" %player0Rewards
+    print "Player 1 Total Reward: %s" %player1Rewards
