@@ -38,7 +38,6 @@ class QLearningAlgorithm():
     # You should update the weights using self.getStepSize(); use
     # self.getQ() to compute the current estimate of the parameters.
     def incorporateFeedback(self, state, action, reward, newState):
-        # BEGIN_YOUR_CODE (our solution is 12 lines of code, but don't worry if you deviate from this)
         if newState is None:
             return
         playerNum = state[1]

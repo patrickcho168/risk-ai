@@ -8,15 +8,6 @@ from QLearning import QLearningAlgorithm
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
              sort=False, showTime=0.5, show=True):
-    # Return i in [0, ..., len(probs)-1] with probability probs[i].
-    # def sample(probs):
-    #     target = np.random.rand()
-    #     accum = 0
-    #     for i, prob in enumerate(probs):
-    #         accum += prob
-    #         if accum >= target: return i
-    #     raise Exception("Invalid probs: %s" % probs)
-
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
@@ -26,7 +17,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         plt.show()
     totalRewards = []  # The rewards we get on each trial
     for trial in range(numTrials):
-        print "Trial Number: %s" %trial
+        # print "Trial Number: %s" %trial
         state = mdp.startState()
         sequence = [state]
         totalDiscount = 1
@@ -75,7 +66,7 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.featureExtractor)
-    rewards = simulate(mdp, rl, numTrials=10, verbose=False, show=False, showTime=0.05)
+    rewards = simulate(mdp, rl, numTrials=1000, verbose=False, show=False, showTime=0.05)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -85,9 +76,11 @@ if __name__ == "__main__":
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
     orderedWeights = []
-    for state, weight in rl.weights.iteritems():
-        if weight != 0:
-            print "%s: %s" %(state, weight)
+    print len(rl.weights)
+    print len([weight for weight in rl.weights.values() if weight != 0])
+    # for state, weight in rl.weights.iteritems():
+    #     if weight != 0:
+    #         print "%s: %s" %(state, weight)
 
     print player0RewardsSequence
     print "Player 0 Total Reward: %s" %player0Rewards
