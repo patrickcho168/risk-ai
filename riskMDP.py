@@ -330,6 +330,7 @@ class RiskMDP:
             defendingCountry = action[2]
             assert countryMap[attackingCountry][0] == playerNumber
             assert countryMap[defendingCountry][0] != playerNumber
+            defendingPlayer = countryMap[defendingCountry][0]
             countryMapProbability, attack_success = self.simulateAttack(attackingCountry, defendingCountry, state)
             for oneResult in countryMapProbability:
                 countryMap, probability = oneResult
@@ -341,7 +342,7 @@ class RiskMDP:
                         for i in range(self.numberOfPlayers):
                             if i == playerNumber:
                                 attackSuccessReward.append(attackReward)
-                            elif i == countryMap[defendingCountry][0]:
+                            elif i == defendingPlayer:
                                 attackSuccessReward.append(-attackReward)
                             else:
                                 attackSuccessReward.append(0)
@@ -410,9 +411,9 @@ class RiskMDP:
             countryPlayer = countryState[0]
             countryTroops = countryState[1]
             if countryPlayer == playerNum:
-                features.append((countryTroops+3)/5)
+                features.append(1+countryTroops/5)
             else:
-                features.append(-(countryTroops+3)/5)
+                features.append(-(1+countryTroops/5))
         featureKey = (tuple(features), action)
         featureValue = 1
         return [(featureKey, featureValue)]

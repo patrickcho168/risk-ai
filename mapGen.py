@@ -2,6 +2,7 @@ import csv
 import networkx as nx
 from collections import defaultdict
 import numpy as np
+import matplotlib.pyplot as plt
 
 class WorldMap:
     def numberOfCountries(self): raise NotImplementedError("Override me")

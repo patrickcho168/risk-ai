@@ -21,10 +21,10 @@ class QLearningAlgorithm():
     # This algorithm will produce an action given a state.
     # Here we use the epsilon-greedy algorithm: with probability
     # |explorationProb|, take a random action.
-    def getAction(self, state):
+    def getAction(self, state, do_explore=True):
         self.numIters += 1
         gameState, playerNumber, countryMap, additionalParameter = state
-        if random.random() < self.explorationProb:
+        if do_explore and random.random() < self.explorationProb:
             return random.choice(self.actions(state))
         else:
             return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]

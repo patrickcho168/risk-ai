@@ -7,7 +7,7 @@ from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
-             sort=False, showTime=0.5, show=True):
+             sort=False, showTime=0.5, show=True, do_explore=True):
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
@@ -17,7 +17,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         plt.show()
     totalRewards = []  # The rewards we get on each trial
     for trial in range(numTrials):
-        # print "Trial Number: %s" %trial
+        print "Trial Number: %s" %trial
         state = mdp.startState()
         sequence = [state]
         totalDiscount = 1
@@ -25,14 +25,14 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         for player in range(mdp.numberOfPlayers):
             totalReward.append(0)
         for iterationNumber in range(maxIterations):
-            action = rl.getAction(state)
-            if verbose:
+            action = rl.getAction(state, do_explore)
+            if verbose and action[0]=='ATTACK_COUNTRY':
                 print "-----%s-----" %iterationNumber
                 print "Player Number: %s" %state[1]
                 print "State: " + str(state)
                 print "Action: " + str(action)
                 if show:
-                    mdp.drawState(state,  show=False, showTime=showTime)
+                    mdp.drawState(state,  show=True, showTime=showTime)
             transitions = mdp.succAndProbReward(state, action)
             if sort: transitions = sorted(transitions)
             if len(transitions) == 0:
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.featureExtractor)
-    rewards = simulate(mdp, rl, numTrials=1000, verbose=False, show=False, showTime=0.05)
+    rewards = simulate(mdp, rl, numTrials=100, verbose=False, show=False, showTime=0.05)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -85,3 +85,5 @@ if __name__ == "__main__":
     print player0RewardsSequence
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
+
+    rewards = simulate(mdp, rl, numTrials=1, verbose=True, show=True, showTime=5, do_explore=False)
