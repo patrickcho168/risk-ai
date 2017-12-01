@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 class RiskActions:
     def __init__(self):
@@ -79,6 +80,16 @@ class RiskMDP:
     def getNextPlayer(self, playerNum):
         return (playerNum + 1)%self.numberOfPlayers
 
+    def ownsContinent(self, playerNum, countryMap, continent):
+        countries = self.worldMap.getContinentCountries(continent)
+        # print playerNum, countryMap, continent, countries
+        if not countryMap:
+            return False
+        for country in countries:
+            if country not in countryMap or countryMap[country][0] != playerNum:
+                return False
+        return True
+
     def getTroopCount(self, state):
         gameState, playerNumber, countryMap, additionalParameter = state
         assert(gameState == self.gameStates.place)
@@ -91,13 +102,7 @@ class RiskMDP:
         # Add based on continents owned
         numberOfContinents = self.worldMap.numberOfContinents()
         for continent in range(numberOfContinents):
-            ownContinent = True
-            countries = self.worldMap.getContinentCountries(continent)
-            for country in countries:
-                if countryMap[country][0] != playerNumber:
-                    ownContinent = False
-                    break
-            if ownContinent:
+            if self.ownsContinent(playerNumber, countryMap, continent):
                 troopCount += self.worldMap.getContinentReward(continent)
         return max(3, troopCount)
 
@@ -280,8 +285,8 @@ class RiskMDP:
         actionType = action[0]
         results = []
         noGameReward = [0] * self.numberOfPlayers
-        attackReward = 1
-        winRewardFactor = 100
+        attackReward = 0
+        winRewardFactor = 10
         if gameState == self.gameStates.end:
             return results
         # elif actionType == self.gameActions.tradeCards:
@@ -402,7 +407,7 @@ class RiskMDP:
 
     def drawState(self, state, show=True, showTime=0.05):
         countryMap = state[2]
-        self.worldMap.drawState(countryMap, show, showTime)
+        self.worldMap.featureExtractor(countryMap, show, showTime)
 
     def featureExtractor(self, state, action, playerNum):
         gameState, playerNumber, countryMap, additionalParameter = state
@@ -417,3 +422,62 @@ class RiskMDP:
         featureKey = (tuple(features), action)
         featureValue = 1
         return [(featureKey, featureValue)]
+
+
+    #TODO: add features for-
+    #number of clusters of countries
+    #border size / opp neighbor size
+    #border troop total / opp neighbor border troop total
+    #proportion of excess troops on border
+    def smartFeatures(self, state, action, playerNum):
+        gameState, playerNumber, countryMap, additionalParameter = state
+        features = []
+        my_country_states = []
+        opp_country_states = []
+        num_my_troops = 0
+        num_opp_troops = 0
+        for country, countryState in countryMap.iteritems():
+            countryPlayer = countryState[0]
+            countryTroops = countryState[1]
+            if countryPlayer == playerNum:
+                my_country_states.append(countryState)
+                num_my_troops += countryTroops
+            else:
+                opp_country_states.append(countryState)
+                num_opp_troops += countryTroops
+
+        num_my_countries = len(my_country_states)
+        num_opp_countries = len(opp_country_states)
+
+        my_continent_bonus = 0
+        opp_continent_bonus = 0 
+        total_continent_count = self.worldMap.numberOfContinents()
+        for continent in range(total_continent_count):
+            if self.ownsContinent(playerNum, countryMap, continent):
+                my_continent_bonus += self.worldMap.getContinentReward(continent)
+            for opp in range(self.numberOfPlayers):
+                if opp != playerNum:
+                    if self.ownsContinent(opp, countryMap, continent):
+                        opp_continent_bonus += self.worldMap.getContinentReward(continent)
+
+        def safe_ratio(x, y, base):
+            return (float(base)+x)/(float(base)+y)
+
+        # features.append(num_my_troops)
+        # features.append(num_opp_troops)
+        # features.append(safe_ratio(num_my_troops, num_opp_troops, 1))
+
+        features.append(num_my_countries)
+        features.append(num_opp_countries)
+        features.append(safe_ratio(num_my_countries, num_opp_countries, .1))
+
+        # features.append(my_continent_bonus)
+        # features.append(opp_continent_bonus)
+        # features.append(safe_ratio(my_continent_bonus, opp_continent_bonus, .1))
+        
+        # features = np.log(1.+np.array(features))
+
+        feature_pairs = []
+        for i in range(len(features)):
+            feature_pairs.append((i, features[i]))
+        return feature_pairs

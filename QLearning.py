@@ -21,13 +21,17 @@ class QLearningAlgorithm():
     # This algorithm will produce an action given a state.
     # Here we use the epsilon-greedy algorithm: with probability
     # |explorationProb|, take a random action.
-    def getAction(self, state, do_explore=True):
+    def getAction(self, state, do_explore=True, do_random=False):
         self.numIters += 1
         gameState, playerNumber, countryMap, additionalParameter = state
-        if do_explore and random.random() < self.explorationProb:
+        if do_random or (do_explore and random.random() < self.explorationProb):
             return random.choice(self.actions(state))
         else:
-            return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]
+            # return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]
+            best_pair = max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))
+            print best_pair[0]
+            return best_pair[1]
+
 
     # Call this function to get the step size to update the weights.
     def getStepSize(self):
@@ -44,5 +48,6 @@ class QLearningAlgorithm():
         Qhat = self.getQ(state, action, playerNum)
         Vhat = max([self.getQ(newState, act, playerNum) for act in self.actions(newState)])
         features = self.featureExtractor(state, action, playerNum)
+        print Qhat, Vhat, features, self.weights
         for f, v in features:
             self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[playerNum] + self.discount * Vhat)) * v
