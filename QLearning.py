@@ -25,6 +25,7 @@ class QLearningAlgorithm():
         
         def pick_random_best(score_action_pairs):
             best_score = max(score_action_pairs)[0]
+            # print best_score
             candidates = [p for p in score_action_pairs if p[0] == best_score]
             return random.choice(candidates)[1]
 
@@ -48,15 +49,14 @@ class QLearningAlgorithm():
         if newState is None:
             return
 
-        active_player = newState[1]
+        next_player = newState[1]
         for player in range(len(reward)):
             Qhat = self.getQ(state, action, player)
-            if player == active_player:
-                Vhat = max([self.getQ(newState, act, player) for act in self.actions(newState)])
+            if player == next_player:
+                Vhat = max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
             else:
-                Vhat = min([self.getQ(newState, act, player) for act in self.actions(newState)])
+                Vhat = -max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
 
             features = self.featureExtractor(state, action, player)
             for f, v in features:
-                # print player, f, self.weights[f], Qhat, reward[player], Vhat
                 self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[player] + self.discount * Vhat)) * v
