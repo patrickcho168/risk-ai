@@ -207,6 +207,14 @@ class RiskMDP:
         countryMap = {}
         if self.numberOfPlayers == 2:
             starting_troops = 40
+            countryMap[0] = (0, 10)
+            countryMap[1] = (0, 10)
+            countryMap[2] = (0, 10)
+            countryMap[6] = (0, 10)
+            countryMap[3] = (1, 10)
+            countryMap[4] = (1, 10)
+            countryMap[5] = (1, 10)
+            countryMap[7] = (1, 10)
         elif self.numberOfPlayers == 3:
             starting_troops = 35
         elif self.numberOfPlayers == 4:

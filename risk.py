@@ -67,7 +67,8 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
 
 if __name__ == "__main__":
     # worldMap = ClassicWorldMap("classicWorldMap.csv", "classicWorldMapCoordinates.csv")
-    worldMap = ClassicWorldMap("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
+    # worldMap = ClassicWorldMap("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
+    worldMap = ClassicWorldMap("mediumWorldMap.csv", "mediumWorldMapCoordinates.csv")
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
