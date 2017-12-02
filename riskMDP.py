@@ -1,5 +1,4 @@
 import copy
-import numpy as np
 
 class RiskActions:
     def __init__(self):
@@ -98,6 +97,8 @@ class RiskMDP:
         troopCount = 0
         numberOfPlayerCountries = len(self.getPlayerCountries(state))
         troopCount += numberOfPlayerCountries / 3
+
+
 
         # Add based on continents owned
         numberOfContinents = self.worldMap.numberOfContinents()
@@ -285,8 +286,8 @@ class RiskMDP:
         actionType = action[0]
         results = []
         noGameReward = [0] * self.numberOfPlayers
-        attackReward = .1
-        winRewardFactor = 1000
+        attackReward = 0
+        winRewardFactor = 100
         if gameState == self.gameStates.end:
             return results
         # elif actionType == self.gameActions.tradeCards:
@@ -407,7 +408,7 @@ class RiskMDP:
 
     def drawState(self, state, show=True, showTime=0.05):
         countryMap = state[2]
-        self.worldMap.featureExtractor(countryMap, show, showTime)
+        self.worldMap.drawState(countryMap, show, showTime)
 
     def featureExtractor(self, state, action, playerNum):
         gameState, playerNumber, countryMap, additionalParameter = state
@@ -423,7 +424,6 @@ class RiskMDP:
         featureValue = 1
         return [(featureKey, featureValue)]
 
-
     #TODO: add features for-
     #number of clusters of countries
     #border size / opp neighbor size
@@ -434,6 +434,8 @@ class RiskMDP:
         features = []
         my_country_states = []
         opp_country_states = []
+        ownership_feature = []
+
         num_my_troops = 0
         num_opp_troops = 0
         for country, countryState in countryMap.iteritems():
@@ -442,9 +444,11 @@ class RiskMDP:
             if countryPlayer == playerNum:
                 my_country_states.append(countryState)
                 num_my_troops += countryTroops
+                ownership_feature.append(1)
             else:
                 opp_country_states.append(countryState)
                 num_opp_troops += countryTroops
+                ownership_feature.append(-1)
 
         num_my_countries = len(my_country_states)
         num_opp_countries = len(opp_country_states)
@@ -466,4 +470,5 @@ class RiskMDP:
         features.append((tuple([1+(num_my_troops/5), 1+(num_opp_troops/5), 'troop']), 1))
         features.append((tuple([num_my_countries, num_opp_countries, 'country']), 1))
         features.append((tuple([my_continent_bonus, opp_continent_bonus, 'continent']), 1))
+        features.append((tuple([tuple(ownership_feature), 'ownership']), 1))
         return features

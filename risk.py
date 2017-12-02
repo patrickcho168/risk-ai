@@ -7,7 +7,7 @@ from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
-             sort=False, showTime=0.5, show=True, do_explore=True, player0_random=False, do_feedback=True):
+             sort=False, showTime=0.5, show=False, do_explore=True, player1_random=False):
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
@@ -17,16 +17,18 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         plt.show()
     totalRewards = []  # The rewards we get on each trial
     for trial in range(numTrials):
-        print "Trial Number: %s" %trial
+        if trial % 50 == 0:
+            print "Trial Number: %s" %trial
         state = mdp.startState()
         sequence = [state]
         totalDiscount = 1
-        totalReward = [0] * mdp.numberOfPlayers
-
+        totalReward = []
+        for player in range(mdp.numberOfPlayers):
+            totalReward.append(0)
         for iterationNumber in range(maxIterations):
             turn = state[1]
-            if player0_random and turn==0:
-                 action = rl.getAction(state, do_explore, do_random=True)
+            if player1_random and turn==1:
+                 action = rl.getAction(state, do_explore, player1_random)
             else:
                 action = rl.getAction(state, do_explore)
             if verbose and action[0]=='ATTACK_COUNTRY':
@@ -49,8 +51,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             sequence.append(reward)
             sequence.append(newState)
 
-            if do_feedback:
-                rl.incorporateFeedback(state, action, reward, newState)
+            rl.incorporateFeedback(state, action, reward, newState)
             for player in range(mdp.numberOfPlayers):
                 totalReward[player] += totalDiscount * reward[player]
             totalDiscount *= mdp.discount()
@@ -70,7 +71,11 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
-    rewards = simulate(mdp, rl, numTrials=100, verbose=False, show=False, showTime=0.05)
+
+    num_trails = 1000
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
+
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -79,25 +84,21 @@ if __name__ == "__main__":
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
-    
-    # for state, weight in rl.weights.iteritems():
-    #     if weight != 0:
-    #         print "%s: %s" %(state, weight)
 
-    print player0RewardsSequence
+    # print player0RewardsSequence
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
 
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, player1_random=True)
+
     player0Rewards = 0
     player1Rewards = 0
     player0RewardsSequence = []
-    rewards = simulate(mdp, rl, numTrials=100, verbose=False, show=False, player0_random=True, do_feedback=False)
-
     for reward in rewards:
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
 
-    print player0RewardsSequence
+    # print player0RewardsSequence
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards

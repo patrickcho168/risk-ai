@@ -21,17 +21,20 @@ class QLearningAlgorithm():
     # This algorithm will produce an action given a state.
     # Here we use the epsilon-greedy algorithm: with probability
     # |explorationProb|, take a random action.
-    def getAction(self, state, do_explore=True, do_random=False):
+    def getAction(self, state, do_explore=True, play_random=False):
+        
+        def pick_random_best(score_action_pairs):
+            best_score = max(score_action_pairs)[0]
+            candidates = [p for p in score_action_pairs if p[0] == best_score]
+            return random.choice(candidates)[1]
+
         self.numIters += 1
         gameState, playerNumber, countryMap, additionalParameter = state
-        if do_random or (do_explore and random.random() < self.explorationProb):
+        if play_random or (do_explore and random.random() < self.explorationProb):
             return random.choice(self.actions(state))
         else:
+            return pick_random_best([(self.getQ(state, action, playerNumber), action) for action in self.actions(state)])
             # return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]
-            best_pair = max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))
-            # print best_pair[0]
-            return best_pair[1]
-
 
     # Call this function to get the step size to update the weights.
     def getStepSize(self):
@@ -44,9 +47,16 @@ class QLearningAlgorithm():
     def incorporateFeedback(self, state, action, reward, newState):
         if newState is None:
             return
-        playerNum = state[1]
-        Qhat = self.getQ(state, action, playerNum)
-        Vhat = max([self.getQ(newState, act, playerNum) for act in self.actions(newState)])
-        features = self.featureExtractor(state, action, playerNum)
-        for f, v in features:
-            self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[playerNum] + self.discount * Vhat)) * v
+
+        active_player = newState[1]
+        for player in range(len(reward)):
+            Qhat = self.getQ(state, action, player)
+            if player == active_player:
+                Vhat = max([self.getQ(newState, act, player) for act in self.actions(newState)])
+            else:
+                Vhat = min([self.getQ(newState, act, player) for act in self.actions(newState)])
+
+            features = self.featureExtractor(state, action, player)
+            for f, v in features:
+                # print player, f, self.weights[f], Qhat, reward[player], Vhat
+                self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[player] + self.discount * Vhat)) * v
