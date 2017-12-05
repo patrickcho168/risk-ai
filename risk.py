@@ -27,8 +27,8 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             totalReward.append(0)
         for iterationNumber in range(maxIterations):
             turn = state[1]
-            if random_players and turn in random_players:
-                 action = rl.getAction(state, do_explore, play_random=True)
+            if state[0] != 'ATTACK' or (random_players and turn in random_players):
+                action = rl.getAction(state, do_explore, play_random=True)
             else:
                 action = rl.getAction(state, do_explore)
             if verbose and action[0]=='ATTACK_COUNTRY':
