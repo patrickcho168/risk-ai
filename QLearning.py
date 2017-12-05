@@ -10,6 +10,9 @@ class QLearningAlgorithm():
         self.explorationProb = explorationProb
         self.weights = defaultdict(float)
         self.numIters = 0
+        self.SARS_buffer = []
+        self.SARS_buffer_max_size = 128
+        self.SARS_buffer_bias = 0.1
 
     # Return the Q function associated with the weights and features
     def getQ(self, state, action, playerNumber):
@@ -45,18 +48,26 @@ class QLearningAlgorithm():
     # Note that if s is a terminal state, then s' will be None.  Remember to check for this.
     # You should update the weights using self.getStepSize(); use
     # self.getQ() to compute the current estimate of the parameters.
-    def incorporateFeedback(self, state, action, reward, newState):
+    def incorporateFeedback(self, state, action, reward, newState, is_end=False):
         if newState is None:
             return
 
-        next_player = newState[1]
-        for player in range(len(reward)):
-            Qhat = self.getQ(state, action, player)
-            if player == next_player:
-                Vhat = max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
-            else:
-                Vhat = -max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+        #add some sars to the buffer
+        if is_end or random.random() < self.SARS_buffer_bias:
+            self.SARS_buffer.append((state, action, reward, newState))
 
-            features = self.featureExtractor(state, action, player)
-            for f, v in features:
-                self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[player] + self.discount * Vhat)) * v
+        if len(self.SARS_buffer) == self.SARS_buffer_max_size:
+            for state, action, reward, newState in self.SARS_buffer:
+                next_player = newState[1]
+                for player in range(len(reward)):
+                    Qhat = self.getQ(state, action, player)
+                    if player == next_player:
+                        Vhat = max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+                    else:
+                        Vhat = -max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+
+                    features = self.featureExtractor(state, action, player)
+                    for f, v in features:
+                        self.weights[f] = self.weights[f] - self.getStepSize() * (Qhat - (reward[player] + self.discount * Vhat)) * v
+            self.SARS_buffer = []
+            return max(self.weights.values())

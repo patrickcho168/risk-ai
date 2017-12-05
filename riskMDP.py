@@ -22,6 +22,8 @@ class RiskMDP:
         assert(numberOfPlayers >= 2 and numberOfPlayers <= 6)
         self.numberOfPlayers = numberOfPlayers
         self.verbose = verbose
+        self.attackReward = 1
+        self.winRewardFactor = 100
 
         # Setup Struct of Risk Game States
         self.gameStates = RiskStates()
@@ -295,8 +297,8 @@ class RiskMDP:
         actionType = action[0]
         results = []
         noGameReward = [0] * self.numberOfPlayers
-        attackReward = 0
-        winRewardFactor = 100
+        attackReward = self.attackReward
+        winRewardFactor = self.winRewardFactor
         if gameState == self.gameStates.end:
             return results
                

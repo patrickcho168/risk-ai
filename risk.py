@@ -11,11 +11,11 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
-
     if verbose:
         plt.ion()
         plt.show()
     totalRewards = []  # The rewards we get on each trial
+    weight_max = []
     for trial in range(numTrials):
         if trial % 50 == 0:
             print "Trial Number: %s" %trial
@@ -51,7 +51,10 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             sequence.append(reward)
             sequence.append(newState)
 
-            rl.incorporateFeedback(state, action, reward, newState)
+            is_end = (reward == mdp.winRewardFactor)
+            highest_weight = rl.incorporateFeedback(state, action, reward, newState, is_end)
+            if highest_weight:
+                weight_max.append(highest_weight)
             for player in range(mdp.numberOfPlayers):
                 totalReward[player] += totalDiscount * reward[player]
             totalDiscount *= mdp.discount()
@@ -63,6 +66,8 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         # if verbose:
         #     print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
         totalRewards.append(totalReward)
+    # plt.plot(xrange(len(weight_max)), weight_max)
+    # plt.show()
     return totalRewards
 
 if __name__ == "__main__":
