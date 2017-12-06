@@ -98,8 +98,8 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
-    uct = UCT(mdp, None)
     hp = HeuristicPlayer(worldMap, mdp)
+    uct = UCT(mdp, hp)
 
     num_trails = 100
 

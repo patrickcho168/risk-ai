@@ -6,9 +6,9 @@ import numpy as np
 from copy import deepcopy
 
 class UCT():
-	def __init__(self, MDP, heuristic):
+	def __init__(self, MDP, heuristic_player):
 		self.MDP = MDP
-		self.heuristic = self.random_heuristic
+		self.heuristic_player = heuristic_player
 		self.T = set()
 		self.N = defaultdict(dict)
 		self.Q = defaultdict(dict)
@@ -20,16 +20,15 @@ class UCT():
 		actions = self.MDP.actions(s)
 		return np.random.choice(actions)
 
-	def select_action(self, s, d, play_random=False):
+	def flush_data(self):
+		self.T = set()
+		self.N = defaultdict(dict)
+		self.Q = defaultdict(dict)
+
+	def select_action(self, s, d):
 		self.curr_player = s.curr_player
-		if play_random:
-			return self.random_heuristic(s)
 		if not s.is_attack():
-			return self.heuristic(s)
-		# print "selecting action"
-		# self.T = set()
-		# self.N = defaultdict(dict)
-		# self.Q = defaultdict(dict)
+			return self.heuristic_player.getAction(s)
 		start = time.time()
 		iters = 0 
 		while time.time() - start < self.time_limit:
@@ -45,9 +44,7 @@ class UCT():
 			return 0
 
 		if s not in self.T:
-			# print s.to_string()
 			for a in self.MDP.actions(s):
-				# print a.to_string()
 				self.N[s][a] = 1.0
 				self.Q[s][a] = 0.0
 			self.T.add(s)
@@ -76,13 +73,10 @@ class UCT():
 		return sp, r
 
 	def rollout(self, s, d):
-		# print "rollout"
-		# print d
-		# print s
 		
 		if d == 0 or s.is_end():
 			return 0 # Can change to heuristic evaluation function
-		a = self.heuristic(s)
+		a = self.heuristic_player.getAction(s)
 		sp, r = self.get_sp_r(s, a)
 		return r + self.MDP.discount() * self.rollout(sp, d-1)
 
