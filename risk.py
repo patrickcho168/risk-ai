@@ -7,8 +7,12 @@ from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
 from HeuristicPlayer import HeuristicPlayer
 
-def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
-             sort=False, showTime=0.5, show=False, do_explore=True, random_players=[], hp=None):
+player_qlearning = 'QLearning'
+player_random = 'Random'
+player_heuristic = 'Heuristic'
+
+def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
+             sort=False, showTime=0.5, show=False, do_explore=True, players=[]):
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
@@ -27,10 +31,14 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         for player in range(mdp.numberOfPlayers):
             totalReward.append(0)
         for iterationNumber in range(maxIterations):
-            turn = state[1]
-            if hp is not None and state[0] == 'PLACE':
+            if state.is_end():
+                break
+            curr_player = state.curr_player
+            if state.is_place():
                 action = hp.getAction(state)
-            elif state[0] != 'ATTACK' or (random_players and turn in random_players):
+            elif not state.is_setup() and players[curr_player] == player_heuristic:
+                action = hp.getAction(state)
+            elif not state.is_attack() or players[curr_player] == player_random:
                 action = rl.getAction(state, do_explore, play_random=True)
             else:
                 action = rl.getAction(state, do_explore)
@@ -41,21 +49,13 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
                 print "Action: " + str(action)
                 if show:
                     mdp.drawState(state, show=True, showTime=showTime)
-            transitions = mdp.succAndProbReward(state, action)
-            if sort: transitions = sorted(transitions)
-            if len(transitions) == 0:
-                rl.incorporateFeedback(state, action, 0, None)
-                break
-
-            # Choose a random transition
-            i = sample([prob for newState, prob, reward in transitions])
-            newState, prob, reward = transitions[i]
+            
+            newState, reward = mdp.simulate_action(state, action)
             sequence.append(action)
             sequence.append(reward)
             sequence.append(newState)
 
-            is_end = (reward == mdp.winRewardFactor)
-            highest_weight = rl.incorporateFeedback(state, action, reward, newState, is_end)
+            highest_weight = rl.incorporateFeedback(state, action, reward, newState)
             if highest_weight:
                 weight_max.append(highest_weight)
             for player in range(mdp.numberOfPlayers):
@@ -69,8 +69,8 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         # if verbose:
         #     print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
         totalRewards.append(totalReward)
-    # plt.plot(xrange(len(weight_max)), weight_max)
-    # plt.show()
+    plt.plot(xrange(len(weight_max)), weight_max)
+    plt.show()
     return totalRewards
 
 if __name__ == "__main__":
@@ -82,10 +82,10 @@ if __name__ == "__main__":
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
     hp = HeuristicPlayer(worldMap, mdp)
 
-    num_trails = 1000
+    num_trails = 500
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, hp=hp)
-
+    players = [player_qlearning, player_qlearning]
+    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     player0RewardsSequence = []
@@ -96,18 +96,17 @@ if __name__ == "__main__":
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
-
     # print player0RewardsSequence
+    print players
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1], hp=hp)
-
+    players = [player_qlearning, player_heuristic]
+    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     p0_wins = 0
-
     player0RewardsSequence = []
     for reward in rewards:
         if reward[0] > 0:
@@ -115,14 +114,14 @@ if __name__ == "__main__":
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
-
     # print player0RewardsSequence
+    print players
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[0,1], hp=hp)
-
+    players = [player_heuristic, player_qlearning]
+    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     p0_wins = 0
@@ -133,8 +132,26 @@ if __name__ == "__main__":
         player0Rewards += reward[0]
         player1Rewards += reward[1]
         player0RewardsSequence.append(reward[0])
-
     # print player0RewardsSequence
+    print players
+    print "Player 0 Total Reward: %s" %player0Rewards
+    print "Player 1 Total Reward: %s" %player1Rewards
+    print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
+
+    players = [player_heuristic, player_heuristic]
+    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    player0Rewards = 0
+    player1Rewards = 0
+    p0_wins = 0
+    player0RewardsSequence = []
+    for reward in rewards:
+        if reward[0] > 0:
+            p0_wins += 1
+        player0Rewards += reward[0]
+        player1Rewards += reward[1]
+        player0RewardsSequence.append(reward[0])
+    # print player0RewardsSequence
+    print players
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
