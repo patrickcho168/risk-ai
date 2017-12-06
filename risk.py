@@ -5,9 +5,10 @@ import pickle
 from mapGen import ClassicWorldMap
 from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
+from HeuristicPlayer import HeuristicPlayer
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
-             sort=False, showTime=0.5, show=False, do_explore=True, random_players=[]):
+             sort=False, showTime=0.5, show=False, do_explore=True, random_players=[], hp=None):
     def sample(probs):
         return np.random.choice(len(probs), p=probs)
 
@@ -27,7 +28,9 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             totalReward.append(0)
         for iterationNumber in range(maxIterations):
             turn = state[1]
-            if state[0] != 'ATTACK' or (random_players and turn in random_players):
+            if hp is not None and state[0] == 'PLACE':
+                action = hp.getAction(state)
+            elif state[0] != 'ATTACK' or (random_players and turn in random_players):
                 action = rl.getAction(state, do_explore, play_random=True)
             else:
                 action = rl.getAction(state, do_explore)
@@ -77,10 +80,11 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
+    hp = HeuristicPlayer(worldMap, mdp)
 
     num_trails = 1000
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, hp=hp)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -98,7 +102,7 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1])
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1], hp=hp)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -117,7 +121,7 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[0,1])
+    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[0,1], hp=hp)
 
     player0Rewards = 0
     player1Rewards = 0
