@@ -8,7 +8,7 @@ from QLearning import QLearningAlgorithm
 from uct import *
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
-             sort=False, showTime=0.5, show=False, do_explore=True, random_players=[]):
+             sort=False, showTime=0.5, show=False, do_explore=True, random_players=[], ai_option='ql'):
 
     if verbose:
         plt.ion()
@@ -28,15 +28,20 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             if state.is_end():
                 break
             curr_player = state.curr_player
-            if not state.is_attack() or (random_players and curr_player in random_players):
-                action = rl.getAction(state, do_explore, play_random=True)
+            if ai_option is 'ql':
+                if not state.is_attack() or (random_players and curr_player in random_players):
+                    action = rl.getAction(state, do_explore, play_random=True)
+                else:
+                    action = rl.getAction(state, do_explore)
+            elif ai_option is 'uct':
+                action = rl.select_action(state, d=5)
             else:
-                action = rl.getAction(state, do_explore)
-            if verbose and action[0]=='ATTACK_COUNTRY':
+                raise ValueError("Unsupported AI {}".format(ai_option))
+            if verbose and action.is_attack():
                 print "-----%s-----" %iterationNumber
-                print "Player Number: %s" %state[1]
-                print "State: " + str(state)
-                print "Action: " + str(action)
+                print "Player Number: %s" %state.curr_player
+                print "State: " + state.to_string()
+                print "Action: " + action.to_string()
                 if show:
                     mdp.drawState(state, show=True, showTime=showTime)
             
@@ -45,22 +50,25 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
             sequence.append(reward)
             sequence.append(newState)
 
-            highest_weight = rl.incorporateFeedback(state, action, reward, newState)
-            if highest_weight:
-                weight_max.append(highest_weight)
+            if ai_option is 'ql':
+                highest_weight = rl.incorporateFeedback(state, action, reward, newState)
+                if highest_weight:
+                    weight_max.append(highest_weight)
             for player in range(mdp.numberOfPlayers):
                 totalReward[player] += totalDiscount * reward[player]
             totalDiscount *= mdp.discount()
             state = newState
 
-        ### Save Weights
-        with open('weights.pkl', 'wb') as f:
-            pickle.dump(rl.weights, f, pickle.HIGHEST_PROTOCOL)
+        if ai_option is 'ql':
+            ### Save Weights
+            with open('weights.pkl', 'wb') as f:
+                pickle.dump(rl.weights, f, pickle.HIGHEST_PROTOCOL)
         # if verbose:
         #     print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
         totalRewards.append(totalReward)
-    plt.plot(xrange(len(weight_max)), weight_max)
-    plt.show()
+    # if ai_option is 'ql':
+    #     plt.plot(xrange(len(weight_max)), weight_max)
+    #     plt.show()
     return totalRewards
 
 if __name__ == "__main__":
@@ -70,12 +78,12 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
-    uct = UCT(mdp)
+    uct = UCT(mdp, None)
 
-    num_trails = 1
+    num_trails = 100
 
     # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
-    rewards = simulate(mdp, uct, numTrials=num_trails, verbose=False)
+    rewards = simulate(mdp, uct, numTrials=num_trails, verbose=False, ai_option='uct')
 
     player0Rewards = 0
     player1Rewards = 0
@@ -94,6 +102,8 @@ if __name__ == "__main__":
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
     # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1])
+    # rewards = simulate(mdp, rl, numTrials=1, verbose=True, do_explore=False, random_players=[1])
+
 
     # player0Rewards = 0
     # player1Rewards = 0
