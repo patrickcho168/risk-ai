@@ -8,8 +8,6 @@ from QLearning import QLearningAlgorithm
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
              sort=False, showTime=0.5, show=False, do_explore=True, random_players=[]):
-    def sample(probs):
-        return np.random.choice(len(probs), p=probs)
 
     if verbose:
         plt.ion()
@@ -26,8 +24,10 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         for player in range(mdp.numberOfPlayers):
             totalReward.append(0)
         for iterationNumber in range(maxIterations):
-            turn = state[1]
-            if state[0] != 'ATTACK' or (random_players and turn in random_players):
+            if state.is_end():
+                break
+            curr_player = state.curr_player
+            if not state.is_attack() or (random_players and curr_player in random_players):
                 action = rl.getAction(state, do_explore, play_random=True)
             else:
                 action = rl.getAction(state, do_explore)
@@ -38,21 +38,13 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
                 print "Action: " + str(action)
                 if show:
                     mdp.drawState(state, show=True, showTime=showTime)
-            transitions = mdp.succAndProbReward(state, action)
-            if sort: transitions = sorted(transitions)
-            if len(transitions) == 0:
-                rl.incorporateFeedback(state, action, 0, None)
-                break
-
-            # Choose a random transition
-            i = sample([prob for newState, prob, reward in transitions])
-            newState, prob, reward = transitions[i]
+            
+            newState, reward = mdp.simulate_action(state, action)
             sequence.append(action)
             sequence.append(reward)
             sequence.append(newState)
 
-            is_end = (reward == mdp.winRewardFactor)
-            highest_weight = rl.incorporateFeedback(state, action, reward, newState, is_end)
+            highest_weight = rl.incorporateFeedback(state, action, reward, newState)
             if highest_weight:
                 weight_max.append(highest_weight)
             for player in range(mdp.numberOfPlayers):
@@ -66,8 +58,8 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
         # if verbose:
         #     print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
         totalRewards.append(totalReward)
-    # plt.plot(xrange(len(weight_max)), weight_max)
-    # plt.show()
+    plt.plot(xrange(len(weight_max)), weight_max)
+    plt.show()
     return totalRewards
 
 if __name__ == "__main__":

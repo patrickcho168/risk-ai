@@ -33,12 +33,10 @@ class QLearningAlgorithm():
             return random.choice(candidates)[1]
 
         self.numIters += 1
-        gameState, playerNumber, countryMap, additionalParameter = state
         if play_random or (do_explore and random.random() < self.explorationProb):
             return random.choice(self.actions(state))
         else:
-            return pick_random_best([(self.getQ(state, action, playerNumber), action) for action in self.actions(state)])
-            # return max((self.getQ(state, action, playerNumber), action) for action in self.actions(state))[1]
+            return pick_random_best([(self.getQ(state, action, state.curr_player), action) for action in self.actions(state)])
 
     # Call this function to get the step size to update the weights.
     def getStepSize(self):
@@ -48,23 +46,27 @@ class QLearningAlgorithm():
     # Note that if s is a terminal state, then s' will be None.  Remember to check for this.
     # You should update the weights using self.getStepSize(); use
     # self.getQ() to compute the current estimate of the parameters.
-    def incorporateFeedback(self, state, action, reward, newState, is_end=False):
+    def incorporateFeedback(self, state, action, reward, newState):
         if newState is None:
             return
 
         #add some sars to the buffer
-        if is_end or random.random() < self.SARS_buffer_bias:
+        if newState.is_end() or random.random() < self.SARS_buffer_bias:
             self.SARS_buffer.append((state, action, reward, newState))
 
         if len(self.SARS_buffer) == self.SARS_buffer_max_size:
+            self.SARS_buffer = self.SARS_buffer[::]
             for state, action, reward, newState in self.SARS_buffer:
-                next_player = newState[1]
+                next_player = newState.curr_player
                 for player in range(len(reward)):
                     Qhat = self.getQ(state, action, player)
-                    if player == next_player:
-                        Vhat = max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+                    if newState.is_end():
+                        Vhat = 0
                     else:
-                        Vhat = -max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+                        if player == next_player:
+                            Vhat = max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
+                        else:
+                            Vhat = -max([self.getQ(newState, act, next_player) for act in self.actions(newState)])
 
                     features = self.featureExtractor(state, action, player)
                     for f, v in features:
