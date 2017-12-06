@@ -139,6 +139,17 @@ class RiskMDP:
                     countryList.append(neighbor)
         return False
 
+    def simulate_action(self, state, action):
+        if action[0] == self.gameStates.attackCountry:
+            new_state, attack_success = self.simulateAttack(action[1], action[2], state)
+            reward = 0
+            if attack_success:
+                reward = self.attackReward
+        else:
+            transitions = mdp.succAndProbReward(state, action)
+            new_state, prob, reward = transitions[0]
+        return new_state, reward
+
     def simulateAttack(self, attackingCountry, defendingCountry, state):
         gameState, playerNumber, countryMap, additionalParameter = state
         
