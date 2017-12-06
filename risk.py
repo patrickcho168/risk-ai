@@ -5,11 +5,13 @@ import pickle
 from mapGen import ClassicWorldMap
 from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
+from uct import *
 from HeuristicPlayer import HeuristicPlayer
 
 player_qlearning = 'QLearning'
 player_random = 'Random'
 player_heuristic = 'Heuristic'
+player_uct = 'UCT'
 
 def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
              sort=False, showTime=0.5, show=False, do_explore=True, players=[]):
@@ -40,13 +42,15 @@ def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
                 action = hp.getAction(state)
             elif not state.is_attack() or players[curr_player] == player_random:
                 action = rl.getAction(state, do_explore, play_random=True)
+            elif players[curr_player] == player_uct:
+                action = rl.select_action(state, d=5)
             else:
-                action = rl.getAction(state, do_explore)
-            if verbose and action[0]=='ATTACK_COUNTRY':
+                raise ValueError("Unsupported AI {}".format(ai_option))
+            if verbose and action.is_attack():
                 print "-----%s-----" %iterationNumber
-                print "Player Number: %s" %state[1]
-                print "State: " + str(state)
-                print "Action: " + str(action)
+                print "Player Number: %s" %state.curr_player
+                print "State: " + state.to_string()
+                print "Action: " + action.to_string()
                 if show:
                     mdp.drawState(state, show=True, showTime=showTime)
             
@@ -55,22 +59,25 @@ def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
             sequence.append(reward)
             sequence.append(newState)
 
-            highest_weight = rl.incorporateFeedback(state, action, reward, newState)
-            if highest_weight:
-                weight_max.append(highest_weight)
+            if ai_option is 'ql':
+                highest_weight = rl.incorporateFeedback(state, action, reward, newState)
+                if highest_weight:
+                    weight_max.append(highest_weight)
             for player in range(mdp.numberOfPlayers):
                 totalReward[player] += totalDiscount * reward[player]
             totalDiscount *= mdp.discount()
             state = newState
 
-        ### Save Weights
-        with open('weights.pkl', 'wb') as f:
-            pickle.dump(rl.weights, f, pickle.HIGHEST_PROTOCOL)
+        if ai_option is 'ql':
+            ### Save Weights
+            with open('weights.pkl', 'wb') as f:
+                pickle.dump(rl.weights, f, pickle.HIGHEST_PROTOCOL)
         # if verbose:
         #     print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
         totalRewards.append(totalReward)
-    plt.plot(xrange(len(weight_max)), weight_max)
-    plt.show()
+    # if ai_option is 'ql':
+    #     plt.plot(xrange(len(weight_max)), weight_max)
+    #     plt.show()
     return totalRewards
 
 if __name__ == "__main__":
@@ -80,12 +87,14 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
+    uct = UCT(mdp, None)
     hp = HeuristicPlayer(worldMap, mdp)
 
-    num_trails = 500
+    num_trails = 100
 
-    players = [player_qlearning, player_qlearning]
-    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=players)
+    players = [player_uct, player_uct]
+    #rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=players)
+    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     player0RewardsSequence = []
@@ -102,8 +111,8 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    players = [player_qlearning, player_heuristic]
-    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    players = [player_uct, player_heuristic]
+    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     p0_wins = 0
@@ -120,8 +129,8 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    players = [player_heuristic, player_qlearning]
-    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    players = [player_heuristic, player_uct]
+    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     p0_wins = 0
@@ -139,7 +148,7 @@ if __name__ == "__main__":
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
     players = [player_heuristic, player_heuristic]
-    rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
     player0Rewards = 0
     player1Rewards = 0
     p0_wins = 0
@@ -155,5 +164,3 @@ if __name__ == "__main__":
     print "Player 0 Total Reward: %s" %player0Rewards
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
-
-    # rewards = simulate(mdp, rl, numTrials=1, verbose=True, show=False, do_explore=False, player1_random=True)
