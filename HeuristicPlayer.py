@@ -21,10 +21,12 @@ class HeuristicPlayer():
             if target_cont_country <= -1:
                 #reinforce weakness in own continent or boost footholds in others
                 target_cont_country = self.getContWeakestBorder(state, volatile_cont)
+            if target_cont_country <= -1:
+                target_cont_country = self.getLeastSafeCountry(state)
             return Place_Action(target_cont_country, 1)
         elif state.is_attack():
             #attack from strongest to weakest, starting with trying to attack in the easiest continent
-            if easiest_cont < -1:
+            if easiest_cont == -1:
                 easiest_cont = None
             attack_from = self.getContStrongestOwnCountry(state, easiest_cont)
             if attack_from < 0:
@@ -33,6 +35,9 @@ class HeuristicPlayer():
             if attack_from < 0:
                 return End_Action() #no possible moves e.g. all countries 1 troop only
             attack_to = self.getCountryWeakestContOpp(state, attack_from, easiest_cont)
+            if attack_to == -1:
+                easiest_cont = None
+                attack_to = self.getCountryWeakestContOpp(state, attack_from, easiest_cont)
             return Attack_Action(attack_from, attack_to)
         elif state.is_fortify():
             fort_from, fort_troops = self.getSafeCountry(state)
@@ -41,6 +46,9 @@ class HeuristicPlayer():
                 fort_to = self.getContWeakestBorder(state, easiest_cont)
                 if fort_to <= -1:
                     fort_to = self.getContWeakestBorder(state, volatile_cont)
+                if fort_to <= -1:
+                    fort_to = self.getLeastSafeCountry(state)
+                #print easiest_cont, volatile_cont
                 #print fort_from, fort_to, fort_troops, state.country_mapping
                 return Fortify_Action(fort_from, fort_to, fort_troops - 1)
             return End_Action()
@@ -77,7 +85,7 @@ class HeuristicPlayer():
                 if cont_diff < volatile_cont_diff:
                     volatile_cont = continent
                     volatile_cont_diff = cont_diff
-            else: #handle cases where cocntinent lines are clearly split
+            else: #handle cases where continent lines are clearly split
                 if easiest_cont < 0:
                     easiest_cont = continent
                 if easiest_cont < 0:
@@ -140,3 +148,15 @@ class HeuristicPlayer():
             if state.country_mapping[country][0] == state.curr_player and self.getBorderOppTroops(state, country) == 0 and state.country_mapping[country][1] > 1:
                 return (country, state.country_mapping[country][1])
         return (None, None)
+    
+    def getLeastSafeCountry(self, state):
+        worst_country = -1
+        worst_troop_ratio = -1
+        for country in state.country_mapping:
+            if state.country_mapping[country][0] == state.curr_player:
+                opp_troops = self.getBorderOppTroops(state, country)
+                troop_ratio = float(opp_troops) / state.country_mapping[country][1]
+                if troop_ratio > worst_troop_ratio:
+                    worst_troop_ratio = troop_ratio
+                    worst_country = country
+        return worst_country
