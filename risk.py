@@ -5,6 +5,7 @@ import pickle
 from mapGen import ClassicWorldMap
 from riskMDP import RiskMDP
 from QLearning import QLearningAlgorithm
+from uct import *
 
 def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
              sort=False, showTime=0.5, show=False, do_explore=True, random_players=[]):
@@ -69,10 +70,12 @@ if __name__ == "__main__":
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
+    uct = UCT(mdp)
 
-    num_trails = 1000
+    num_trails = 1
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
+    # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
+    rewards = simulate(mdp, uct, numTrials=num_trails, verbose=False)
 
     player0Rewards = 0
     player1Rewards = 0
@@ -90,41 +93,41 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1])
+    # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[1])
 
-    player0Rewards = 0
-    player1Rewards = 0
-    p0_wins = 0
+    # player0Rewards = 0
+    # player1Rewards = 0
+    # p0_wins = 0
 
-    player0RewardsSequence = []
-    for reward in rewards:
-        if reward[0] > 0:
-            p0_wins += 1
-        player0Rewards += reward[0]
-        player1Rewards += reward[1]
-        player0RewardsSequence.append(reward[0])
+    # player0RewardsSequence = []
+    # for reward in rewards:
+    #     if reward[0] > 0:
+    #         p0_wins += 1
+    #     player0Rewards += reward[0]
+    #     player1Rewards += reward[1]
+    #     player0RewardsSequence.append(reward[0])
 
-    # print player0RewardsSequence
-    print "Player 0 Total Reward: %s" %player0Rewards
-    print "Player 1 Total Reward: %s" %player1Rewards
-    print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
+    # # print player0RewardsSequence
+    # print "Player 0 Total Reward: %s" %player0Rewards
+    # print "Player 1 Total Reward: %s" %player1Rewards
+    # print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[0,1])
+    # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False, do_explore=False, random_players=[0,1])
 
-    player0Rewards = 0
-    player1Rewards = 0
-    p0_wins = 0
-    player0RewardsSequence = []
-    for reward in rewards:
-        if reward[0] > 0:
-            p0_wins += 1
-        player0Rewards += reward[0]
-        player1Rewards += reward[1]
-        player0RewardsSequence.append(reward[0])
+    # player0Rewards = 0
+    # player1Rewards = 0
+    # p0_wins = 0
+    # player0RewardsSequence = []
+    # for reward in rewards:
+    #     if reward[0] > 0:
+    #         p0_wins += 1
+    #     player0Rewards += reward[0]
+    #     player1Rewards += reward[1]
+    #     player0RewardsSequence.append(reward[0])
 
-    # print player0RewardsSequence
-    print "Player 0 Total Reward: %s" %player0Rewards
-    print "Player 1 Total Reward: %s" %player1Rewards
-    print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
+    # # print player0RewardsSequence
+    # print "Player 0 Total Reward: %s" %player0Rewards
+    # print "Player 1 Total Reward: %s" %player1Rewards
+    # print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    # rewards = simulate(mdp, rl, numTrials=1, verbose=True, show=False, do_explore=False, player1_random=True)
+    # # rewards = simulate(mdp, rl, numTrials=1, verbose=True, show=False, do_explore=False, player1_random=True)
