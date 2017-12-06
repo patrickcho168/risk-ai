@@ -27,9 +27,9 @@ class UCT():
 		if not s.is_attack():
 			return self.heuristic(s)
 		# print "selecting action"
-		self.T = set()
-		self.N = defaultdict(dict)
-		self.Q = defaultdict(dict)
+		# self.T = set()
+		# self.N = defaultdict(dict)
+		# self.Q = defaultdict(dict)
 		start = time.time()
 		iters = 0 
 		while time.time() - start < self.time_limit:
