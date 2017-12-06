@@ -16,7 +16,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
     totalRewards = []  # The rewards we get on each trial
     weight_max = []
     for trial in range(numTrials):
-        if trial % 50 == 0:
+        if trial % 5 == 0:
             print "Trial Number: %s" %trial
         state = mdp.startState()
         sequence = [state]
@@ -34,7 +34,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000000, verbose=False,
                 else:
                     action = rl.getAction(state, do_explore)
             elif ai_option is 'uct':
-                action = rl.select_action(state, d=5)
+                action = rl.select_action(state, d=5, play_random = (curr_player in random_players))
             else:
                 raise ValueError("Unsupported AI {}".format(ai_option))
             if verbose and action.is_attack():
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     num_trails = 100
 
     # rewards = simulate(mdp, rl, numTrials=num_trails, verbose=False)
-    rewards = simulate(mdp, uct, numTrials=num_trails, verbose=False, ai_option='uct')
+    rewards = simulate(mdp, uct, numTrials=num_trails, verbose=False, ai_option='uct', random_players=[1])
 
     player0Rewards = 0
     player1Rewards = 0

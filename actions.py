@@ -7,13 +7,16 @@ class Action():
 	def __init__(self, action_type):
 		self.action_type = action_type
 
-	def to_string(self):
+	def __str__(self):
 		to_ret = "\nACTION:\n"
 		to_ret += str(self.action_type) + '\n'
 		return to_ret
 
 	def __hash__(self):
-		return hash(self.to_string())
+		return hash(self.__str__())
+
+	def __eq__(self, other):
+		return self.action_type == other.action_type
 
 	def is_attack(self):
 		return self.action_type == action_attack_country
@@ -33,8 +36,13 @@ class Attack_Action(Action):
 		self.from_country = from_country
 		self.to_country = to_country
 
-	def to_string(self):
-		to_ret = Action.to_string(self)
+	def __eq__(self, other):
+		return Action.__eq__(self, other) and \
+		self.from_country == other.from_country and \
+		self.to_country == other.to_country
+
+	def __str__(self):
+		to_ret = Action.__str__(self)
 		to_ret += "{} -> {}\n".format(self.from_country, self.to_country)
 		return to_ret
 
@@ -44,8 +52,13 @@ class Place_Action(Action):
 		self.country = country
 		self.num_troops = num_troops
 
-	def to_string(self):
-		to_ret = Action.to_string(self)
+	def __eq__(self, other):
+		return Action.__eq__(self, other) and \
+		self.country == other.country and \
+		self.num_troops == other.num_troops
+
+	def __str__(self):
+		to_ret = Action.__str__(self)
 		to_ret += "Place {} troops at {}\n".format(self.num_troops, self.country)
 		return to_ret
 
@@ -56,8 +69,14 @@ class Fortify_Action(Action):
 		self.to_country = to_country
 		self.num_troops = num_troops
 
-	def to_string(self):
-		to_ret = Action.to_string(self)
+	def __eq__(self, other):
+		return Action.__eq__(self, other) and \
+		self.from_country == other.from_country and \
+		self.to_country == other.to_country and \
+		self.num_troops == other.num_troops
+
+	def __str__(self):
+		to_ret = Action.__str__(self)
 		to_ret += "{} -> {}\n".format(self.from_country, self.to_country)
 		to_ret += "Num troops {}\n".format(self.num_troops)
  		return to_ret

@@ -45,13 +45,6 @@ class RiskMDP:
     ###### START HELPER FUNCITONS ######
 
     def getEmptyCountries(self, state):
-        # country_mapping = state[2]
-        # numberOfCountries = self.board_map.numberOfCountries()
-        # listOfEmptyCountries = []
-        # for i in range(numberOfCountries):
-        #     if i not in country_mapping:
-        #         listOfEmptyCountries.append(i)
-        # return listOfEmptyCountries
         numberOfCountries = self.board_map.numberOfCountries()
         listOfEmptyCountries = []
         for i in range(numberOfCountries):
@@ -60,14 +53,7 @@ class RiskMDP:
         return listOfEmptyCountries
 
     def getPlayerCountries(self, state):
-        # country_mapping = state[2]
-        # playerNum = state[1]
-        # listOfPlayerCountries = []
-        # for country, countryState in country_mapping.iteritems():
-        #     countryPlayer, countryTroops = countryState
-        #     if countryPlayer == playerNum:
-        #         listOfPlayerCountries.append(country)
-        # return listOfPlayerCountries
+
         listOfPlayerCountries = []
         for country, countryState in state.country_mapping.iteritems():
             countryPlayer, countryTroops = countryState
@@ -88,19 +74,6 @@ class RiskMDP:
         return True
 
     def getTroopCount(self, state):
-        # gameState, curr_player, country_mapping, additionalParameter = state
-        # assert(gameState == self.gameStates.place)
-        # # Add number of countries owned / 3 floored
-        # troopCount = 0
-        # numberOfPlayerCountries = len(self.getPlayerCountries(state))
-        # troopCount += numberOfPlayerCountries / 3
-        # # Add based on continents owned
-        # numberOfContinents = self.board_map.numberOfContinents()
-        # for continent in range(numberOfContinents):
-        #     if self.ownsContinent(curr_player, country_mapping, continent):
-        #         troopCount += self.board_map.getContinentReward(continent)
-        # return max(3, troopCount)
-
         assert state.is_place()
         # Add number of countries owned / 3 floored
         troopCount = 0
@@ -114,15 +87,6 @@ class RiskMDP:
         return max(3, troopCount)
 
     def getPossibleMoveTroops(self, state):
-        # gameState, curr_player, country_mapping, additionalParameter = state
-        # playerCountries = self.getPlayerCountries(state)
-        # possibleMoves = []
-        # for country1 in playerCountries:
-        #     for country2 in playerCountries:
-        #         if self.canFortify(country_mapping, country1, country2):
-        #             possibleMoves.append((country1, country2))
-        # return possibleMoves
-
         assert state.is_fortify()
         possible_actions = [End_Action()]
         if self.fortify_counter <= self.fortify_max_counter:
@@ -135,24 +99,6 @@ class RiskMDP:
         return possible_actions
 
     def reachable(self, country_mapping, from_country):
-        # # Same player owns the 2 countries
-        # assert(country_mapping[country1][0] == country_mapping[country2][0])
-        # curr_player = country_mapping[country1][0]
-
-        # # DFS
-        # countryList = [country1]
-        # visited = {country1: 1}
-        # while len(countryList) > 0:
-        #     nextCountry = countryList.pop()
-        #     allNeighbors = self.board_map.bordered(nextCountry)
-        #     for neighbor in allNeighbors:
-        #         if neighbor == country2:
-        #             return True
-        #         if country_mapping[neighbor][0] == curr_player and neighbor not in visited:
-        #             visited[neighbor] = 1
-        #             countryList.append(neighbor)
-        # return False
-
         curr_player = country_mapping[from_country][0]
 
         # DFS
@@ -178,37 +124,7 @@ class RiskMDP:
         return newState, reward
 
     def simulateAttack(self, state, action):
-        # gameState, curr_player, country_mapping, additionalParameter = state
-        
-        # # Cannot attack own country
-        # assert(country_mapping[attackingCountry][0] != country_mapping[defendingCountry][0])       
-        # numberOfAttackingTroops = country_mapping[attackingCountry][1]
-        # numberOfDefendingTroops = country_mapping[defendingCountry][1]
-        # country_mappingToProbabilityMapping = []
-
-        # # Check Memo for Same Battle
-        # if (numberOfAttackingTroops, numberOfDefendingTroops) not in self.battleMemo:
-        #     self.getAttackProbability(numberOfAttackingTroops, numberOfDefendingTroops)
-
-        # for result, probability in self.battleMemo[(numberOfAttackingTroops, numberOfDefendingTroops)].iteritems():
-        #     attackersLeft = result[0]
-        #     defendersLeft = result[1]
-        #     newcountry_mapping = copy.deepcopy(country_mapping)
-        #     # Attackers Won!
-        #     if defendersLeft == 0:
-        #         newcountry_mapping[defendingCountry] = (country_mapping[attackingCountry][0], attackersLeft - 1) # TAKE OVER TERRITORY
-        #         newcountry_mapping[attackingCountry] = (country_mapping[attackingCountry][0], 1)
-        #         country_mappingToProbabilityMapping.append((newcountry_mapping, probability))
-        #         reward = self.attackReward
-        #     # Attackers Lost!
-        #     elif attackersLeft == 1:
-        #         newcountry_mapping[defendingCountry] = (country_mapping[defendingCountry][0], defendersLeft)
-        #         newcountry_mapping[attackingCountry] = (country_mapping[attackingCountry][0], attackersLeft)
-        #         country_mappingToProbabilityMapping.append((newcountry_mapping, probability))
-        #         attack_success = 0
-        #     else:
-        #         raise ValueError("Either Attacker Loses or Defender Loses!")
-        # return country_mappingToProbabilityMapping, reward
+      
         country_mapping = state.country_mapping
         attackingCountry = action.from_country
         defendingCountry = action.to_country
@@ -318,67 +234,6 @@ class RiskMDP:
         return Setup_State(country_mapping, firstPlayer, starting_troops)
 
     def actions(self, state):
-        # gameState, curr_player, country_mapping, additionalParameter = state
-        # listOfActions = []
-
-        # # Setup State. Player gets to place troops in any empty countries.
-        # # When no more empty countries, place in own territory.
-        # if gameState == self.gameStates.setup:
-        #     emptyCountries = self.getEmptyCountries(state)
-        #     assert(additionalParameter > 0)
-        #     if len(emptyCountries) > 0:
-        #         for country in emptyCountries:
-        #             listOfActions.append((self.gameActions.placeTroops, country, 1))
-        #     else:
-        #         playerCountries = self.getPlayerCountries(state)
-        #         for country in playerCountries:
-        #             listOfActions.append((self.gameActions.placeTroops, country, 1))
-        #     return listOfActions
-        
-        # # Place Troops State. 
-        # # Player gets to place troops in any territory he owns.
-        # elif gameState == self.gameStates.place:
-        #     assert(additionalParameter > 0)
-        #     playerCountries = self.getPlayerCountries(state)
-        #     for country in playerCountries:
-        #         listOfActions.append((self.gameActions.placeTroops, country, 1))
-        #     return listOfActions
-        
-        # # Attack State.
-        # # Player gets to end turn or attack any adjacent country.
-        # elif gameState == self.gameStates.attack:
-        #     listOfActions = [(self.gameActions.endTurn,)]
-        #     playerCountries = self.getPlayerCountries(state)
-        #     for country in playerCountries:
-        #         assert country_mapping[country][0] == curr_player
-        #         # Must have more than one troop to attack!
-        #         if country_mapping[country][1] > 1:
-        #             allNeighbors = self.board_map.bordered(country)
-        #             for neighborCountry in allNeighbors:
-        #                 # Cannot attack yourself!
-        #                 if country_mapping[neighborCountry][0] != curr_player:
-        #                     listOfActions.append((self.gameActions.attackCountry, country, neighborCountry))
-        #     return listOfActions
-        
-        # # Fortify State.
-        # # Move from one country to the next to decide whether or not to move troops
-        # elif gameState == self.gameStates.fortify:
-        #     countryPairs = additionalParameter[0]
-        #     countryMove = additionalParameter[1]
-        #     countryPair = countryPairs[countryMove]
-        #     fromCountry = countryPair[0]
-
-        #     # Must leave at least 1 troop behind
-        #     for i in range(country_mapping[fromCountry][1]):
-        #         listOfActions.append((self.gameActions.moveTroops, i))
-        #     return listOfActions
-        
-        # elif gameState == self.gameStates.end:
-        #     return ['Celebrate!']
-
-        # else:
-        #     raise ValueError("Impossible Game State")
-
         listOfActions = []
 
         # Setup State. Player gets to place troops in any empty countries.
@@ -437,128 +292,11 @@ class RiskMDP:
             raise ValueError("Impossible Game State")
 
     def succAndProbReward(self, state, action):
-        # gameState, curr_player, country_mapping, additionalParameter = state
-        # actionType = action[0]
-        # results = []
-        # noGameReward = [0] * self.numberOfPlayers
-        # attackReward = self.attackReward
-        # winRewardFactor = self.winRewardFactor
-        # if gameState == self.gameStates.end:
-        #     return results
-               
-        # elif actionType == self.gameActions.placeTroops:
-        #     country = action[1]
-        #     num_troops = action[2]
-            
-        #     # In setup state
-        #     if gameState == self.gameStates.setup:
-        #         if country not in country_mapping:
-        #             country_mapping[country] = (curr_player, num_troops)
-        #         else:
-        #             country_mapping[country] = (curr_player, country_mapping[country][1] + num_troops)
-        #         nextPlayer = self.getNextPlayer(curr_player)
-        #         # One round has ended!
-        #         if nextPlayer == 0:
-        #             # More troops to place
-        #             if additionalParameter > num_troops:
-        #                 results.append(((self.gameStates.setup, nextPlayer, country_mapping, additionalParameter-num_troops), 1, noGameReward))
-        #             # Let the game begin
-        #             else:
-        #                 nextState = (self.gameStates.place, nextPlayer, country_mapping, 0)
-        #                 troopCount = self.getTroopCount(nextState)
-        #                 results.append(((self.gameStates.place, nextPlayer, country_mapping, troopCount), 1, noGameReward))
-        #         # The round is continuing
-        #         else:
-        #             results.append(((self.gameStates.setup, nextPlayer, country_mapping, additionalParameter), 1, noGameReward))
-            
-        #     # In place state
-        #     elif gameState == self.gameStates.place:
-        #         country_mapping[country] = (curr_player, country_mapping[country][1] + num_troops)
-        #         # More troops to place later
-        #         if additionalParameter > num_troops:
-        #             results.append(((self.gameStates.place, curr_player, country_mapping, additionalParameter-num_troops), 1, noGameReward))
-        #         # Move on to next game state
-        #         else:
-        #             results.append(((self.gameStates.attack, curr_player, country_mapping, None), 1, noGameReward))
-        #     else:
-        #         raise ValueError("Impossible Game State While Placing Troops")
-        
-        # elif actionType == self.gameActions.attackCountry:
-        #     attackingCountry = action[1]
-        #     defendingCountry = action[2]
-        #     assert country_mapping[attackingCountry][0] == curr_player
-        #     assert country_mapping[defendingCountry][0] != curr_player
-        #     defendingPlayer = country_mapping[defendingCountry][0]
-        #     country_mappingProbability, attack_success = self.simulateAttack(attackingCountry, defendingCountry, state)
-        #     for oneResult in country_mappingProbability:
-        #         country_mapping, probability = oneResult
-        #         newState = (self.gameStates.attack, curr_player, country_mapping, None)
-        #         winner = self.getWinner(newState)
-        #         if winner == -1: # No winner
-        #             if attack_success:
-        #                 attackSuccessReward = []
-        #                 for i in range(self.numberOfPlayers):
-        #                     if i == curr_player:
-        #                         attackSuccessReward.append(attackReward)
-        #                     elif i == defendingPlayer:
-        #                         attackSuccessReward.append(-0.9*attackReward) #not as heavy a penalty for losing a state
-        #                     else:
-        #                         attackSuccessReward.append(0)
-        #                 results.append((newState, probability, attackSuccessReward))
-        #             else:
-        #                 results.append((newState, probability, noGameReward))
-        #         else:
-        #             assert(winner == curr_player)
-        #             endGameReward = []
-        #             for i in range(self.numberOfPlayers):
-        #                 if i != winner:
-        #                     endGameReward.append(-1*winRewardFactor)
-        #                 else:
-        #                     endGameReward.append((self.numberOfPlayers-1)*winRewardFactor)
-        #             newState = (self.gameStates.end, curr_player, country_mapping, None)
-        #             results.append((newState, probability, endGameReward))
-        
-        # elif actionType == self.gameActions.moveTroops:
-        #     countryPairs = additionalParameter[0]
-        #     countryMove = additionalParameter[1]
-        #     countryPair = countryPairs[countryMove]
-        #     fromCountry = countryPair[0]
-        #     toCountry = countryPair[1]
-        #     troopsMoved = action[1]
-        #     country_mapping[fromCountry] = (country_mapping[fromCountry][0], country_mapping[fromCountry][1] - troopsMoved)
-        #     country_mapping[toCountry] = (country_mapping[toCountry][0], country_mapping[toCountry][1] + troopsMoved)
-
-        #     # No More Chance To Move Troops
-        #     if countryMove >= len(countryPairs) - 1:
-        #         nextPlayer = self.getNextPlayer(curr_player)
-        #         nextState = (self.gameStates.place, nextPlayer, country_mapping, None)
-        #         troopCount = self.getTroopCount(nextState)
-        #         results.append(((self.gameStates.place, nextPlayer, country_mapping, troopCount), 1, noGameReward))
-        #     else:
-        #         results.append(((self.gameStates.fortify, curr_player, country_mapping, [countryPairs, countryMove+1]), 1, noGameReward))
-
-        # elif actionType == self.gameActions.endTurn:
-        #     if gameState == self.gameStates.attack:
-        #         possibleMoveTroops = self.getPossibleMoveTroops(state)
-        #         if len(possibleMoveTroops) > 0:
-        #             results.append(((self.gameStates.fortify, curr_player, country_mapping, [possibleMoveTroops, 0]), 1, noGameReward))
-        #         else:
-        #             nextPlayer = self.getNextPlayer(curr_player)
-        #             nextState = (self.gameStates.place, nextPlayer, country_mapping, None)
-        #             troopCount = self.getTroopCount(nextState)
-        #             results.append(((self.gameStates.place, nextPlayer, country_mapping, troopCount), 1, noGameReward))
-        #     else:
-        #         raise ValueError("Impossible Game State While Ending Turn")
-        
-        # else:
-        #     raise ValueError("Impossible Action Type: %s" %action)
-        
-        # return results
         results = []
         noGameReward = self.noGameReward
         attackReward = self.attackReward
         winRewardFactor = self.winRewardFactor
-        country_mapping = state.country_mapping
+        newcountry_mapping = copy.deepcopy(state.country_mapping)
         curr_player = state.curr_player
 
         if state.is_end():
@@ -570,26 +308,26 @@ class RiskMDP:
             num_troops = action.num_troops
 
             # In setup state
-            if country not in country_mapping:
-                country_mapping[country] = (curr_player, num_troops)
+            if country not in newcountry_mapping:
+                newcountry_mapping[country] = (curr_player, num_troops)
             else:
-                country_mapping[country] = (curr_player, country_mapping[country][1] + num_troops)
+                newcountry_mapping[country] = (curr_player, newcountry_mapping[country][1] + num_troops)
             nextPlayer = self.getNextPlayer(curr_player)
             # One round has ended!
             if nextPlayer == 0:
                 # More troops to place
                 if state.troops_to_place > num_troops:
-                    next_state = Setup_State(country_mapping, nextPlayer, state.troops_to_place-num_troops)
+                    next_state = Setup_State(newcountry_mapping, nextPlayer, state.troops_to_place-num_troops)
                     results.append((next_state, 1, noGameReward))
                 # Let the game begin
                 else:
-                    next_state = Place_State(country_mapping, nextPlayer, 0)
+                    next_state = Place_State(newcountry_mapping, nextPlayer, 0)
                     troopCount = self.getTroopCount(next_state)
-                    next_state.troops_to_place = troopCount
+                    next_state = Place_State(newcountry_mapping, nextPlayer, troopCount)
                     results.append((next_state, 1, noGameReward))
             # The round is continuing
             else:
-                next_state = Setup_State(country_mapping, nextPlayer, state.troops_to_place)
+                next_state = Setup_State(newcountry_mapping, nextPlayer, state.troops_to_place)
                 results.append((next_state, 1, noGameReward))
         
         # In place state
@@ -598,19 +336,19 @@ class RiskMDP:
             country = action.country
             num_troops = action.num_troops
             
-            country_mapping[country] = (curr_player, country_mapping[country][1] + num_troops)
+            newcountry_mapping[country] = (curr_player, newcountry_mapping[country][1] + num_troops)
             # More troops to place later
             if state.troops_to_place > num_troops:
-                next_state = Place_State(country_mapping, curr_player, state.troops_to_place-num_troops)
+                next_state = Place_State(newcountry_mapping, curr_player, state.troops_to_place-num_troops)
                 results.append((next_state, 1, noGameReward))
             # Move on to next game state
             else:
-                next_state = Attack_State(country_mapping, curr_player)
+                next_state = Attack_State(newcountry_mapping, curr_player)
                 results.append((next_state, 1, noGameReward))
             
         elif state.is_attack():
             if action.is_end():
-                next_state = Fortify_State(country_mapping, curr_player)
+                next_state = Fortify_State(newcountry_mapping, curr_player)
                 results.append((next_state, 1, noGameReward))
             else:
                 return self.simulateAttack(state, action)
@@ -618,9 +356,9 @@ class RiskMDP:
         elif state.is_fortify():
             if action.is_end():
                 self.fortify_counter = 0
-                next_state = Place_State(country_mapping, self.getNextPlayer(curr_player), 0)
+                next_state = Place_State(newcountry_mapping, self.getNextPlayer(curr_player), 0)
                 troopCount = self.getTroopCount(next_state)
-                next_state.troops_to_place = troopCount
+                next_state = Place_State(newcountry_mapping, self.getNextPlayer(curr_player), troopCount)
                 results.append((next_state, 1, noGameReward))
             else:
                 self.fortify_counter += 1
@@ -628,10 +366,11 @@ class RiskMDP:
                 to_country = action.to_country
                 num_troops = action.num_troops
 
-                country_mapping[from_country] = (country_mapping[from_country][0], country_mapping[from_country][1] - num_troops)
-                country_mapping[to_country] = (country_mapping[to_country][0], country_mapping[to_country][1] + num_troops)
 
-                next_state = Fortify_State(country_mapping, curr_player) #can only fortify once
+                newcountry_mapping[from_country] = (newcountry_mapping[from_country][0], newcountry_mapping[from_country][1] - num_troops)
+                newcountry_mapping[to_country] = (newcountry_mapping[to_country][0], newcountry_mapping[to_country][1] + num_troops)
+
+                next_state = Fortify_State(newcountry_mapping, curr_player) #can only fortify once
                 results.append((next_state, 1, noGameReward))
         
         else:

@@ -10,7 +10,7 @@ class State():
 		self.country_mapping = country_mapping
 		self.curr_player = curr_player
 
-	def to_string(self):
+	def __str__(self):
 		to_ret = "\nSTATE:\n"
 		to_ret += str(self.game_phase) + '\n'
 		to_ret += str(self.country_mapping) + '\n'
@@ -18,7 +18,12 @@ class State():
 		return to_ret
 
 	def __hash__(self):
-		return hash(self.to_string())
+		return hash(self.__str__())
+
+	def __eq__(self, other):
+		return self.game_phase == other.game_phase and \
+		self.country_mapping == other.country_mapping and \
+		self.curr_player == other.curr_player 
 
 	def is_setup(self):
 		return self.game_phase == state_setup
@@ -40,8 +45,12 @@ class Setup_State(State):
 		State.__init__(self, state_setup, country_mapping, curr_player)
 		self.troops_to_place = troops_to_place
 
-	def to_string(self):
-		to_ret = State.to_string(self)
+	def __eq__(self, other):
+		State.__eq__(self, other) and \
+		self.troops_to_place == other.troops_to_place
+
+	def __str__(self):
+		to_ret = State.__str__(self)
 		to_ret += "Troops to place: {}\n".format(self.troops_to_place)
 		return to_ret
 
@@ -50,8 +59,12 @@ class Place_State(State):
 		State.__init__(self, state_place, country_mapping, curr_player)
 		self.troops_to_place = troops_to_place
 
-	def to_string(self):
-		to_ret = State.to_string(self)
+	def __eq__(self, other):
+		State.__eq__(self, other) and \
+		self.troops_to_place == other.troops_to_place
+
+	def __str__(self):
+		to_ret = State.__str__(self)
 		to_ret += "Troops to place: {}\n".format(self.troops_to_place)
 		return to_ret
 
