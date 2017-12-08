@@ -9,13 +9,17 @@ class HeuristicPlayer():
         self.mdp = mdp
     
     def getAction(self, state):
-        
+        setup_place = False
+        if state.is_setup():
+            #game randomly assigns territories to players, after which players can assign remaining troops which is the same as placing strategy
+            if len(self.mdp.getEmptyCountries(state)) > 0:
+                return random.choice(self.mdp.actions(state))
+            else:
+                setup_place = True
+
         easiest_cont, volatile_cont = self.getTargetContinent(state)
         
-        #valid_actions = self.actions(state)
-        if state.is_setup():
-            pass #TODO
-        elif state.is_place():
+        if state.is_place() or setup_place:
             #fortify attacking of easiest continent
             target_cont_country = self.getContWeakestBorder(state, easiest_cont)
             if target_cont_country <= -1:

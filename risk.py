@@ -42,22 +42,15 @@ def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
             if players[curr_player] == player_qlearning:
                 if state.is_attack():
                     action = rl.getAction(state, do_explore)
-                elif state.is_setup(): ###TODO: change when heuristic supports setup
-                    action = play_random(state)
                 else:
                     action = hp.getAction(state)
             elif players[curr_player] == player_random:
                 action = play_random(state)
             elif players[curr_player] == player_heuristic:
-                if state.is_setup():
-                    action = play_random(state)
-                else:
-                    action = hp.getAction(state)
+                action = hp.getAction(state)
             elif players[curr_player] == player_uct:
                 if state.is_attack():
                     action = rl.select_action(state, d=5)
-                elif state.is_setup():
-                    action = play_random(state)
                 else:
                     action = hp.getAction(state)
 
@@ -92,9 +85,9 @@ def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
     return totalRewards
 
 if __name__ == "__main__":
-    worldMap = ClassicWorldMap("classicWorldMap.csv", "classicWorldMapCoordinates.csv")
+    #worldMap = ClassicWorldMap("classicWorldMap.csv", "classicWorldMapCoordinates.csv")
     # worldMap = ClassicWorldMap("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
-    # worldMap = ClassicWorldMap("mediumWorldMap.csv", "mediumWorldMapCoordinates.csv")
+    worldMap = ClassicWorldMap("mediumWorldMap.csv", "mediumWorldMapCoordinates.csv")
     numberOfPlayers = 2
     mdp = RiskMDP(worldMap, 2, verbose=True)
     rl = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
