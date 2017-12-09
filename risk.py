@@ -8,6 +8,7 @@ from QLearning import QLearningAlgorithm
 from uct import *
 from HeuristicPlayer import HeuristicPlayer
 import random
+from ValueIteration import ValueIteration
 
 player_qlearning = 'QLearning'
 player_random = 'Random'
@@ -50,7 +51,7 @@ def simulate(mdp, rl, hp, numTrials=10, maxIterations=1000000, verbose=False,
                 action = hp.getAction(state)
             elif players[curr_player] == player_uct:
                 if state.is_attack():
-                    action = rl.select_action(state, d=5)
+                    action = rl.select_action(state, d=10)
                 else:
                     action = hp.getAction(state)
 
@@ -96,6 +97,9 @@ if __name__ == "__main__":
 
     num_trails = 100
 
+    # VI = ValueIteration()
+    # VI.solve(mdp)
+
 
     players = [player_uct, player_uct]
     #rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=players)
@@ -116,41 +120,41 @@ if __name__ == "__main__":
     print "Player 1 Total Reward: %s" %player1Rewards
     print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    players = [player_uct, player_heuristic]
-    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
-    player0Rewards = 0
-    player1Rewards = 0
-    p0_wins = 0
-    player0RewardsSequence = []
-    for reward in rewards:
-        if reward[0] > 0:
-            p0_wins += 1
-        player0Rewards += reward[0]
-        player1Rewards += reward[1]
-        player0RewardsSequence.append(reward[0])
-    # print player0RewardsSequence
-    print players
-    print "Player 0 Total Reward: %s" %player0Rewards
-    print "Player 1 Total Reward: %s" %player1Rewards
-    print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
+    # players = [player_uct, player_heuristic]
+    # rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    # player0Rewards = 0
+    # player1Rewards = 0
+    # p0_wins = 0
+    # player0RewardsSequence = []
+    # for reward in rewards:
+    #     if reward[0] > 0:
+    #         p0_wins += 1
+    #     player0Rewards += reward[0]
+    #     player1Rewards += reward[1]
+    #     player0RewardsSequence.append(reward[0])
+    # # print player0RewardsSequence
+    # print players
+    # print "Player 0 Total Reward: %s" %player0Rewards
+    # print "Player 1 Total Reward: %s" %player1Rewards
+    # print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
-    players = [player_heuristic, player_uct]
-    rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
-    player0Rewards = 0
-    player1Rewards = 0
-    p0_wins = 0
-    player0RewardsSequence = []
-    for reward in rewards:
-        if reward[0] > 0:
-            p0_wins += 1
-        player0Rewards += reward[0]
-        player1Rewards += reward[1]
-        player0RewardsSequence.append(reward[0])
-    # print player0RewardsSequence
-    print players
-    print "Player 0 Total Reward: %s" %player0Rewards
-    print "Player 1 Total Reward: %s" %player1Rewards
-    print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
+    # players = [player_heuristic, player_uct]
+    # rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)
+    # player0Rewards = 0
+    # player1Rewards = 0
+    # p0_wins = 0
+    # player0RewardsSequence = []
+    # for reward in rewards:
+    #     if reward[0] > 0:
+    #         p0_wins += 1
+    #     player0Rewards += reward[0]
+    #     player1Rewards += reward[1]
+    #     player0RewardsSequence.append(reward[0])
+    # # print player0RewardsSequence
+    # print players
+    # print "Player 0 Total Reward: %s" %player0Rewards
+    # print "Player 1 Total Reward: %s" %player1Rewards
+    # print "Player 0 win rate: {}".format(p0_wins/float(len(player0RewardsSequence)))
 
     # players = [player_heuristic, player_heuristic]
     # rewards = simulate(mdp, uct, hp, numTrials=num_trails, verbose=False, do_explore=False, players=players)

@@ -14,6 +14,7 @@ class RiskMDP:
         self.noGameReward = [0] * self.numberOfPlayers
         self.fortify_max_counter = 5
         self.fortify_counter = 0
+        self.max_troops = 3
       
         # Initialize Attack Memo for a single round of dice throw
         # Refer to http://web.mit.edu/sp.268/www/risk.pdf
@@ -165,7 +166,7 @@ class RiskMDP:
                         if i == state.curr_player:
                             attackSuccessReward.append(self.attackReward)
                         elif i == defendingPlayer:
-                            attackSuccessReward.append(-0.9*self.attackReward) #not as heavy a penalty for losing a state
+                            attackSuccessReward.append(-self.attackReward) #not as heavy a penalty for losing a state
                         else:
                             attackSuccessReward.append(0)
                     results.append((new_state, probability, attackSuccessReward))
@@ -220,7 +221,7 @@ class RiskMDP:
         firstPlayer = 0
         country_mapping = {}
         if self.numberOfPlayers == 2:
-            starting_troops = 40
+            starting_troops = 5
         elif self.numberOfPlayers == 3:
             starting_troops = 35
         elif self.numberOfPlayers == 4:
@@ -311,7 +312,7 @@ class RiskMDP:
             if country not in newcountry_mapping:
                 newcountry_mapping[country] = (curr_player, num_troops)
             else:
-                newcountry_mapping[country] = (curr_player, newcountry_mapping[country][1] + num_troops)
+                newcountry_mapping[country] = (curr_player, min(self.max_troops, newcountry_mapping[country][1] + num_troops))
             nextPlayer = self.getNextPlayer(curr_player)
             # One round has ended!
             if nextPlayer == 0:
@@ -336,7 +337,7 @@ class RiskMDP:
             country = action.country
             num_troops = action.num_troops
             
-            newcountry_mapping[country] = (curr_player, newcountry_mapping[country][1] + num_troops)
+            newcountry_mapping[country] = (curr_player, min(self.max_troops, newcountry_mapping[country][1] + num_troops))
             # More troops to place later
             if state.troops_to_place > num_troops:
                 next_state = Place_State(newcountry_mapping, curr_player, state.troops_to_place-num_troops)
@@ -368,7 +369,7 @@ class RiskMDP:
 
 
                 newcountry_mapping[from_country] = (newcountry_mapping[from_country][0], newcountry_mapping[from_country][1] - num_troops)
-                newcountry_mapping[to_country] = (newcountry_mapping[to_country][0], newcountry_mapping[to_country][1] + num_troops)
+                newcountry_mapping[to_country] = (newcountry_mapping[to_country][0], min(self.max_troops, newcountry_mapping[to_country][1] + num_troops))
 
                 next_state = Fortify_State(newcountry_mapping, curr_player) #can only fortify once
                 results.append((next_state, 1, noGameReward))
@@ -377,6 +378,23 @@ class RiskMDP:
             raise ValueError("Impossible State Type: %s" %state)
         
         return results
+
+    def computeStates(self):
+        self.states = set()
+        queue = []
+        self.states.add(self.startState())
+        queue.append(self.startState())
+        while len(queue) > 0:
+            print "Queue Length: {}".format(len(queue))
+            state = queue.pop()
+            if state.is_end():
+                continue
+            for action in self.actions(state):
+                for newState, prob, reward in self.succAndProbReward(state, action):
+                    if newState not in self.states:
+                        self.states.add(newState)
+                        queue.append(newState)
+        print "Total States: {}".format(len(self.states))
 
     def discount(self):
         return 1

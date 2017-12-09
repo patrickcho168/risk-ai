@@ -13,7 +13,7 @@ class State():
 	def __str__(self):
 		to_ret = "\nSTATE:\n"
 		to_ret += str(self.game_phase) + '\n'
-		to_ret += str(self.country_mapping) + '\n'
+		to_ret += str(sorted(self.country_mapping.items())) + '\n'
 		to_ret += "Current player: {}".format(self.curr_player) + '\n'
 		return to_ret
 
@@ -22,7 +22,7 @@ class State():
 
 	def __eq__(self, other):
 		return self.game_phase == other.game_phase and \
-		self.country_mapping == other.country_mapping and \
+		cmp(self.country_mapping, other.country_mapping) == 0 and \
 		self.curr_player == other.curr_player 
 
 	def is_setup(self):
