@@ -55,7 +55,7 @@ class QLearningAlgorithm():
             self.SARS_buffer.append((state, action, reward, newState))
 
         if len(self.SARS_buffer) == self.SARS_buffer_max_size:
-            self.SARS_buffer = self.SARS_buffer[::]
+            self.SARS_buffer = self.SARS_buffer[::-1] #reverse the buffer
             for state, action, reward, newState in self.SARS_buffer:
                 next_player = newState.curr_player
                 for player in range(len(reward)):
