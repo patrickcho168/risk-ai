@@ -469,3 +469,140 @@ class RiskMDP:
         features.append(('is_attack', attack_indicator))
 
         return features
+
+    def evaluate(self, state, playerNum):
+        curr_player = state.curr_player
+        country_mapping = state.country_mapping
+        features = []
+        my_country_states = []
+        opp_country_states = []
+        ownership_feature = []
+        my_troop_count_list = []
+        num_my_troops = 0
+        num_opp_troops = 0
+        for country, countryState in country_mapping.iteritems():
+            countryPlayer = countryState[0]
+            countryTroops = countryState[1]
+            if countryPlayer == playerNum:
+                my_country_states.append(countryState)
+                num_my_troops += countryTroops
+                my_troop_count_list.append(countryTroops)
+                ownership_feature.append(1)
+            else:
+                opp_country_states.append(countryState)
+                num_opp_troops += countryTroops
+                ownership_feature.append(-1)
+
+        num_my_countries = len(my_country_states)
+        num_opp_countries = len(opp_country_states)
+
+        my_continent_bonus = 0
+        opp_continent_bonus = 0 
+        total_continent_count = self.board_map.numberOfContinents()
+        for continent in range(total_continent_count):
+            if self.ownsContinent(playerNum, country_mapping, continent):
+                my_continent_bonus += self.board_map.getContinentReward(continent)
+            for opp in range(self.numberOfPlayers):
+                if opp != playerNum:
+                    if self.ownsContinent(opp, country_mapping, continent):
+                        opp_continent_bonus += self.board_map.getContinentReward(continent)
+
+        def safe_ratio(x, y, base):
+            return min([(base+x)/(base+y), 5])
+
+        my_troop_ratio = safe_ratio(num_my_troops, num_opp_troops, 1)
+        opp_troop_ratio = safe_ratio(num_opp_troops, num_my_troops, 1)
+        troop_diff = num_my_troops-num_opp_troops
+        
+        my_country_ratio = safe_ratio(num_my_countries, num_opp_countries, 1)
+        opp_country_ratio = safe_ratio(num_opp_countries, num_my_countries, 1)
+        country_diff = (num_my_countries-num_opp_countries)
+
+        my_continent_ratio = safe_ratio(my_continent_bonus, opp_continent_bonus, 1)
+        opp_continent_ratio = safe_ratio(opp_continent_bonus, my_continent_bonus, 1)
+        cont_diff = my_continent_bonus-opp_continent_bonus
+
+        turn_indicator = -1
+        if playerNum==curr_player:
+            turn_indicator = 1
+
+        evaluation = 0
+        evaluation += troop_diff
+        evaluation += 10 * my_troop_ratio
+        evaluation -= 10 * opp_troop_ratio
+        evaluation += 5 * country_diff
+        evaluation += 40 * my_country_ratio
+        evaluation -= 40 * opp_continent_ratio
+        evaluation += cont_diff
+        evaluation += 20 * my_continent_ratio
+        evaluation -= 20 * opp_continent_ratio
+        evaluation += 3 * turn_indicator
+
+        return min(evaluation, 0.95 * self.winRewardFactor)
+
+    def state_to_feature_vect(self, state, playerNum):
+        if state.is_end():
+            return ["END"]
+        curr_player = state.curr_player
+        country_mapping = state.country_mapping
+        features = []
+        my_country_states = []
+        opp_country_states = []
+        ownership_feature = []
+        my_troop_count_list = []
+        num_my_troops = 0
+        num_opp_troops = 0
+        for country, countryState in country_mapping.iteritems():
+            countryPlayer = countryState[0]
+            countryTroops = countryState[1]
+            if countryPlayer == playerNum:
+                my_country_states.append(countryState)
+                num_my_troops += countryTroops
+                my_troop_count_list.append(countryTroops)
+                ownership_feature.append(1)
+            else:
+                opp_country_states.append(countryState)
+                num_opp_troops += countryTroops
+                ownership_feature.append(-1)
+
+        num_my_countries = len(my_country_states)
+        num_opp_countries = len(opp_country_states)
+
+        my_continent_bonus = 0
+        opp_continent_bonus = 0 
+        total_continent_count = self.board_map.numberOfContinents()
+        for continent in range(total_continent_count):
+            if self.ownsContinent(playerNum, country_mapping, continent):
+                my_continent_bonus += self.board_map.getContinentReward(continent)
+            for opp in range(self.numberOfPlayers):
+                if opp != playerNum:
+                    if self.ownsContinent(opp, country_mapping, continent):
+                        opp_continent_bonus += self.board_map.getContinentReward(continent)
+
+        def safe_ratio(x, y, base):
+            return min([(base+x)/(base+y), 5])
+
+        my_troop_ratio = safe_ratio(num_my_troops, num_opp_troops, 1)
+        opp_troop_ratio = safe_ratio(num_opp_troops, num_my_troops, 1)
+        troop_diff = (num_my_troops-num_opp_troops) / 5
+        
+        my_country_ratio = safe_ratio(num_my_countries, num_opp_countries, 1)
+        opp_country_ratio = safe_ratio(num_opp_countries, num_my_countries, 1)
+        country_diff = (num_my_countries-num_opp_countries) / 2
+
+        my_continent_ratio = safe_ratio(my_continent_bonus, opp_continent_bonus, 1)
+        opp_continent_ratio = safe_ratio(opp_continent_bonus, my_continent_bonus, 1)
+        cont_diff = (my_continent_bonus-opp_continent_bonus) / 2
+
+        turn_indicator = -1
+        if playerNum==curr_player:
+            turn_indicator = 1
+
+        game_phase = state.game_phase
+        valid_actions = sorted(self.actions(state))
+
+        features = tuple([my_troop_ratio, opp_troop_ratio, troop_diff, my_country_ratio, opp_country_ratio, \
+                        country_diff, my_continent_ratio, opp_continent_ratio, cont_diff, turn_indicator, \
+                        game_phase, tuple(valid_actions)])
+        
+        return features

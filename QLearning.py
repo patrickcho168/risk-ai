@@ -11,8 +11,12 @@ class QLearningAlgorithm():
         self.weights = defaultdict(float)
         self.numIters = 0
         self.SARS_buffer = []
-        self.SARS_buffer_max_size = 128
-        self.SARS_buffer_bias = 0.1
+        self.SARS_buffer_max_size = 10
+        self.SARS_buffer_bias = 0.5
+
+    def flush_data(self):
+        self.SARS_buffer = []
+        self.weights = defaultdict(float)
 
     # Return the Q function associated with the weights and features
     def getQ(self, state, action, playerNumber):
@@ -40,7 +44,8 @@ class QLearningAlgorithm():
 
     # Call this function to get the step size to update the weights.
     def getStepSize(self):
-        return 1.0 / math.sqrt(self.numIters)
+        return 0.1
+        # return 1.0 / math.sqrt(self.numIters)
 
     # We will call this function with (s, a, r, s'), which you should use to update |weights|.
     # Note that if s is a terminal state, then s' will be None.  Remember to check for this.
@@ -50,12 +55,15 @@ class QLearningAlgorithm():
         if newState is None:
             return
 
+        if not state.is_attack():
+            return
+
         #add some sars to the buffer
         if newState.is_end() or random.random() < self.SARS_buffer_bias:
             self.SARS_buffer.append((state, action, reward, newState))
 
         if len(self.SARS_buffer) == self.SARS_buffer_max_size:
-            self.SARS_buffer = self.SARS_buffer[::]
+            self.SARS_buffer = self.SARS_buffer[::-1] #reverse the buffer
             for state, action, reward, newState in self.SARS_buffer:
                 next_player = newState.curr_player
                 for player in range(len(reward)):

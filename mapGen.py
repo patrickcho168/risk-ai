@@ -93,6 +93,7 @@ class ClassicWorldMap(WorldMap):
         values = [self.countryToContinentMapping[node] * 1.0 / numberOfContinents for node in self.worldMap.nodes()]
         nx.draw(self.worldMap, self.pos, cmap=plt.get_cmap('jet'), node_color=values)
         if show:
+            plt.savefig("worldmap.jpg")
             plt.show()
         else:
             plt.pause(showTime)
