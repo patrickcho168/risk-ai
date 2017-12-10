@@ -7,7 +7,7 @@ import random
 from copy import deepcopy
 
 class UCT():
-	def __init__(self, MDP, heuristic_player, c, time_limit=0.5, featurize=False, evaluation_fn=False):
+	def __init__(self, MDP, heuristic_player, c, time_limit=0.5, featurize=False, evaluation_fn=False, d=10):
 		self.MDP = MDP
 		self.heuristic_player = heuristic_player
 		self.T = set()
@@ -18,6 +18,7 @@ class UCT():
 		self.curr_player = 0
 		self.featurize = featurize
 		self.evaluation_fn = evaluation_fn
+		self.d = d
 
 	def random_heuristic(self, s):
 		actions = self.MDP.actions(s)
@@ -28,7 +29,7 @@ class UCT():
 		self.N = defaultdict(dict)
 		self.Q = defaultdict(dict)
 
-	def select_action(self, s, d):
+	def select_action(self, s):
 		self.curr_player = s.curr_player
 		if not s.is_attack():
 			return self.heuristic_player.getAction(s)
@@ -40,7 +41,7 @@ class UCT():
 			phi_s = s
 		while time.time() - start < self.time_limit:
 			iters += 1
-			self.simulate(s, phi_s, d)
+			self.simulate(s, phi_s, self.d)
 		# print "select action completed {} simulations".format(iters)
 		return max(self.Q[phi_s].iteritems(), key=operator.itemgetter(1))[0]
 
