@@ -145,14 +145,14 @@ def validate_c(c_ref, c_list, map_name='small'):
     plt.plot(c_list, y_list)
     plt.show()
 
-validate_c(1, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 3, 4, 5])
+# validate_c(1, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 3, 4, 5])
 
 
 def runTest(worldMapFile, coordinateFile):
     UCT_TIME_LIMIT = 0.1
     UCT_DEPTH = 10
-    UCT_REFERENCE_C = 3
-    UCT_BEST_C = 0.1
+    UCT_REFERENCE_C = 1
+    UCT_BEST_C = 4
     
     worldMap = ClassicWorldMap(worldMapFile, coordinateFile)
     numberOfPlayers = 2
@@ -160,11 +160,11 @@ def runTest(worldMapFile, coordinateFile):
     ql = QLearningAlgorithm(mdp.actions, mdp.discount(), mdp.smartFeatures)
     hp = HeuristicPlayer(worldMap, mdp)
 
-    uct1 = UCT(mdp, hp, UCT_REFERENCE_C, time_limit=UCT_TIME_LIMIT)
-    uct2 = UCT(mdp, hp, UCT_BEST_C, time_limit=UCT_TIME_LIMIT)
-    uct3 = UCT(mdp, hp, UCT_BEST_C, time_limit=UCT_TIME_LIMIT, featurize=True)
-    uct4 = UCT(mdp, hp, UCT_BEST_C, time_limit=UCT_TIME_LIMIT, evaluation_fn=True)
-    uct5 = UCT(mdp, hp, UCT_BEST_C, time_limit=UCT_TIME_LIMIT, featurize=True, evaluation_fn=True)
+    uct1 = UCT(mdp, hp, UCT_REFERENCE_C, d=UCT_DEPTH, time_limit=UCT_TIME_LIMIT)
+    uct2 = UCT(mdp, hp, UCT_BEST_C, d=UCT_DEPTH, time_limit=UCT_TIME_LIMIT)
+    uct3 = UCT(mdp, hp, UCT_BEST_C, d=UCT_DEPTH, time_limit=UCT_TIME_LIMIT, featurize=True)
+    uct4 = UCT(mdp, hp, UCT_BEST_C, d=UCT_DEPTH, time_limit=UCT_TIME_LIMIT, evaluation_fn=True)
+    uct5 = UCT(mdp, hp, UCT_BEST_C, d=UCT_DEPTH, time_limit=UCT_TIME_LIMIT, featurize=True, evaluation_fn=True)
 
     num_trails = 200
     # players = [player_qlearning, player_random, player_heuristic]
@@ -178,8 +178,6 @@ def runTest(worldMapFile, coordinateFile):
         for j in range(len(players)):
             player1 = players[i]
             player2 = players[j]
-            if player1 != player_qlearning and player2 != player_qlearning:
-                continue
             if player1 == player_uct or player1 == player_qlearning:
                 rl_players[i].flush_data()
             if player2 == player_uct or player2 == player_qlearning:
@@ -189,7 +187,7 @@ def runTest(worldMapFile, coordinateFile):
             print "{} vs. {}".format(player1_name, player2_name)
             rl = [rl_players[i], rl_players[j]]
             curr_players = [player1, player2]
-            rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=curr_players, d=UCT_DEPTH)
+            rewards = simulate(mdp, rl, hp, numTrials=num_trails, verbose=False, players=curr_players)
             player0Rewards = 0
             player1Rewards = 0
             player0RewardsSequence = []
@@ -204,8 +202,8 @@ def runTest(worldMapFile, coordinateFile):
             print "Player 0 win rate: {}\n".format(p0_wins/float(len(player0RewardsSequence)))
 
 if __name__ == "__main__":
-    runTest("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
-    # runTest("mediumWorldMap.csv", "mediumWorldMapCoordinates.csv")
+    # runTest("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
+    runTest("mediumWorldMap.csv", "mediumWorldMapCoordinates.csv")
     #worldMap = ClassicWorldMap("classicWorldMap.csv", "classicWorldMapCoordinates.csv")
     # worldMap = ClassicWorldMap("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
     # worldMap = ClassicWorldMap("smallWorldMap.csv", "smallWorldMapCoordinates.csv")
